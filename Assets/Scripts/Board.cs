@@ -20,16 +20,22 @@ public sealed class Board : MonoBehaviour
 
     private void Start()
     {
-        Tiles = new Tile[Width, Height];
+        Tiles = new Tile[rows[0].tiles.Length, rows.Length];
 
         for (var y = 0; y < Height; y++)
         {
             for (var x = 0; x < Width; x++)
             {
-                Tiles[x, y] = rows[y].tiles[x];
+                Tile tile = rows[y].tiles[x];
+
+                tile.x = x;
+                tile.y = y;
+                
+                Tiles[x, y] = tile;
+                tile.Item = ItemDatabase.Items[Random.Range(0, ItemDatabase.Items.Length)];
             }
         }
 
-        
+
     }
 }
