@@ -9,6 +9,9 @@ public sealed class Board : MonoBehaviour
 {
     public static Board Instance { get; private set; }
 
+    [SerializeField] private AudioClip collectSound;
+    [SerializeField] private AudioSource audioSource;
+
     public Row[] rows;
 
     public Tile[,] Tiles { get; private set; }
@@ -130,7 +133,10 @@ public sealed class Board : MonoBehaviour
                 foreach(Tile connectedTile in connectedTiles)
                 {
                     deflateSequence.Join(connectedTile.icon.transform.DOScale(Vector3.zero, TweenDuration));
+                    ScoreCounter.Instance.Score += connectedTile.Item.value;
                 }
+
+                audioSource.PlayOneShot(collectSound);
                 await deflateSequence.Play().AsyncWaitForCompletion();
 
                 Sequence inflateSequence = DOTween.Sequence();
