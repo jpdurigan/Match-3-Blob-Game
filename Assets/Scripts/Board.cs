@@ -22,8 +22,6 @@ public sealed class Board : MonoBehaviour
 
     private List<Tile> _selection = new List<Tile>();
 
-    private const float TweenDuration = 0.25f;
-
     private void Awake()
     {
         Instance = this;
@@ -65,7 +63,7 @@ public sealed class Board : MonoBehaviour
         if (_selection.Contains(tile))
         {
             _selection.Remove(tile);
-            await AnimateDeselect(tile);
+            await Animate.AsyncDeselect(tile);
             return;
         }
 
@@ -77,7 +75,7 @@ public sealed class Board : MonoBehaviour
         }
 
         _selection.Add(tile);
-        await AnimateSelect(tile);
+        await Animate.AsyncSelect(tile);
 
         if (_selection.Count < 2) return;
 
@@ -96,9 +94,7 @@ public sealed class Board : MonoBehaviour
         foreach(Tile selectedTile in _selection)
         {
             bool hasPopped = selectedTile.icon.transform.localScale == Vector3.zero;
-            #pragma warning disable CS4014
-            if (!hasPopped) AnimateDeselect(selectedTile, deselectSequence, false);
-            #pragma warning restore CS4014
+            if (!hasPopped) Animate.Deselect(selectedTile, deselectSequence);
         }
         await deselectSequence.Play().AsyncWaitForCompletion();
 
@@ -116,12 +112,7 @@ public sealed class Board : MonoBehaviour
         Transform icon2Transform = icon2.transform;
 
         // animate movement
-        Sequence sequence = DOTween.Sequence();
-        sequence.Join(icon1Transform.DOMove(icon2Transform.position, TweenDuration))
-                .Join(icon2Transform.DOMove(icon1Transform.position, TweenDuration));
-
-        await sequence.Play()
-                      .AsyncWaitForCompletion();
+        await Animate.AsyncSwap(tile1, tile2);
 
         // swap parents
         icon1Transform.SetParent(tile2.transform);
@@ -166,7 +157,7 @@ public sealed class Board : MonoBehaviour
                 Sequence deflateSequence = DOTween.Sequence();
                 foreach(Tile connectedTile in connectedTiles)
                 {
-                    deflateSequence.Join(connectedTile.icon.transform.DOScale(Vector3.zero, TweenDuration));
+                    Animate.Kill(connectedTile, deflateSequence);
                     ScoreCounter.Instance.Score += connectedTile.Item.value;
                 }
 
@@ -181,27 +172,12 @@ public sealed class Board : MonoBehaviour
                     {
                         tile.Item = ItemDatabase.GetRandomItem();
                     }
-                    inflateSequence.Join(connectedTile.icon.transform.DOScale(Vector3.one, TweenDuration));
+                    Animate.Spawn(connectedTile, inflateSequence);
                 }
                 await inflateSequence.Play().AsyncWaitForCompletion();
 
                 x = 0; y = 0;
             }
         }
-    }
-
-    private async Task AnimateSelect(Tile tile, Sequence sequence = null, bool shouldPlay = true)
-    {
-        if (sequence == null) sequence = DOTween.Sequence();
-        Vector3 selectedScale = Vector3.one * 0.8f;
-        sequence.Join(tile.icon.transform.DOScale(selectedScale, TweenDuration));
-        if (shouldPlay) await sequence.Play().AsyncWaitForCompletion();
-    }
-
-    private async Task AnimateDeselect(Tile tile, Sequence sequence = null, bool shouldPlay = true)
-    {
-        if (sequence == null) sequence = DOTween.Sequence();
-        sequence.Join(tile.icon.transform.DOScale(Vector3.one, TweenDuration));
-        if (shouldPlay) await sequence.Play().AsyncWaitForCompletion();
     }
 }
