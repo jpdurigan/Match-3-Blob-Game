@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
@@ -42,7 +43,11 @@ public sealed class Board : MonoBehaviour
                 tile.y = y;
                 
                 Tiles[x, y] = tile;
-                tile.Item = ItemDatabase.Items[Random.Range(0, ItemDatabase.Items.Length)];
+                tile.Item = ItemDatabase.GetRandomItem();
+                while (tile.GetConnectedTiles().Count > 2)
+                {
+                    tile.Item = ItemDatabase.GetRandomItem();
+                }
             }
         }
 
@@ -57,16 +62,45 @@ public sealed class Board : MonoBehaviour
 
     public async void Select(Tile tile)
     {
-        if (_selection.Contains(tile)) return;
+        if (_selection.Contains(tile))
+        {
+            _selection.Remove(tile);
+            await AnimateDeselect(tile);
+            return;
+        }
+
+        if (_selection.Count == 1)
+        {
+            Tile selectedTile = _selection[0];
+            bool isValidSelect = selectedTile.Neighbours.Contains(tile);
+            if (!isValidSelect) return;
+        }
 
         _selection.Add(tile);
+        await AnimateSelect(tile);
 
         if (_selection.Count < 2) return;
 
         await Swap(_selection[0], _selection[1]);
 
-        if (CanPop()) Pop();
-        else await Swap(_selection[0], _selection[1]);
+        if (CanPop())
+        {
+            await Pop();
+        }
+        else
+        {
+            await Swap(_selection[0], _selection[1]);
+        }
+
+        Sequence deselectSequence = DOTween.Sequence();
+        foreach(Tile selectedTile in _selection)
+        {
+            bool hasPopped = selectedTile.icon.transform.localScale == Vector3.zero;
+            #pragma warning disable CS4014
+            if (!hasPopped) AnimateDeselect(selectedTile, deselectSequence, false);
+            #pragma warning restore CS4014
+        }
+        await deselectSequence.Play().AsyncWaitForCompletion();
 
         _selection.Clear();
     }
@@ -119,7 +153,7 @@ public sealed class Board : MonoBehaviour
         return canPop;
     }
 
-    private async void Pop()
+    private async Task Pop()
     {
         for (int y = 0; y < Height; y++)
         {
@@ -142,11 +176,32 @@ public sealed class Board : MonoBehaviour
                 Sequence inflateSequence = DOTween.Sequence();
                 foreach(Tile connectedTile in connectedTiles)
                 {
-                    connectedTile.Item = ItemDatabase.Items[Random.Range(0, ItemDatabase.Items.Length)];
+                    connectedTile.Item = ItemDatabase.GetRandomItem();
+                    while (tile.GetConnectedTiles().Count > 2)
+                    {
+                        tile.Item = ItemDatabase.GetRandomItem();
+                    }
                     inflateSequence.Join(connectedTile.icon.transform.DOScale(Vector3.one, TweenDuration));
                 }
                 await inflateSequence.Play().AsyncWaitForCompletion();
+
+                x = 0; y = 0;
             }
         }
+    }
+
+    private async Task AnimateSelect(Tile tile, Sequence sequence = null, bool shouldPlay = true)
+    {
+        if (sequence == null) sequence = DOTween.Sequence();
+        Vector3 selectedScale = Vector3.one * 0.8f;
+        sequence.Join(tile.icon.transform.DOScale(selectedScale, TweenDuration));
+        if (shouldPlay) await sequence.Play().AsyncWaitForCompletion();
+    }
+
+    private async Task AnimateDeselect(Tile tile, Sequence sequence = null, bool shouldPlay = true)
+    {
+        if (sequence == null) sequence = DOTween.Sequence();
+        sequence.Join(tile.icon.transform.DOScale(Vector3.one, TweenDuration));
+        if (shouldPlay) await sequence.Play().AsyncWaitForCompletion();
     }
 }
