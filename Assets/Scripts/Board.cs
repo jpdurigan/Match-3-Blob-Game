@@ -41,15 +41,13 @@ public sealed class Board : MonoBehaviour
                 tile.y = y;
                 
                 Tiles[x, y] = tile;
-                tile.Type = ItemDatabase.GetRandomItem().type;
-                while (tile.GetConnectedTiles().Count > 2)
-                {
-                    tile.Type = ItemDatabase.GetRandomItem().type;
-                }
+                tile.Type = Item.Types.NONE;
             }
         }
 
-
+        #pragma warning disable CS4014
+        FillBlanks();
+        #pragma warning restore CS4014
     }
 
     public Tile GetTile(int x, int y)
@@ -79,7 +77,7 @@ public sealed class Board : MonoBehaviour
 
         if (_selection.Count < 2) return;
 
-        await Swap(_selection[0], _selection[1]);
+        await AsyncSwap(_selection[0], _selection[1]);
 
         if (CanPop())
         {
@@ -87,45 +85,20 @@ public sealed class Board : MonoBehaviour
         }
         else
         {
-            await Swap(_selection[0], _selection[1]);
+            await AsyncSwap(_selection[0], _selection[1]);
         }
-
-        Sequence deselectSequence = DOTween.Sequence();
-        foreach(Tile selectedTile in _selection)
-        {
-            bool hasPopped = selectedTile.icon.transform.localScale == Vector3.zero;
-            if (!hasPopped) Animate.Deselect(selectedTile, deselectSequence);
-        }
-        await deselectSequence.Play().AsyncWaitForCompletion();
 
         _selection.Clear();
     }
 
-    public async Task Swap(Tile tile1, Tile tile2, float animSpeed = 1f)
+    public async Task AsyncSwap(Tile tile1, Tile tile2, float animSpeed = 1f)
     {
-        // persistance variables
-        Item.Types item1 = tile1.Type;
-        Item.Types item2 = tile2.Type;
-        Image icon1 = tile1.icon;
-        Image icon2 = tile2.icon;
-        Transform icon1Transform = icon1.transform;
-        Transform icon2Transform = icon2.transform;
-
         // animate movement
         await Animate.AsyncSwap(tile1, tile2, animSpeed);
-
-        // swap parents
-        icon1Transform.SetParent(tile2.transform);
-        icon2Transform.SetParent(tile1.transform);
-
-        // swap icons
-        tile1.icon = icon2;
-        tile2.icon = icon1;
-
-        // swap items
-        tile1.Type = item2;
-        tile2.Type = item1;
+        // swap data
+        SwapData(tile1, tile2);
     }
+
 
     private bool CanPop()
     {
@@ -157,35 +130,25 @@ public sealed class Board : MonoBehaviour
                 Sequence deflateSequence = DOTween.Sequence();
                 foreach(Tile connectedTile in connectedTiles)
                 {
-                    Debug.Log($"killing {connectedTile} | type: {connectedTile.Type}");
                     Animate.Kill(connectedTile, deflateSequence);
-                    ScoreCounter.Instance.Score += ItemDatabase.GetItemValue(connectedTile.Type);
-                    connectedTile.Type = Item.Types.NONE;
                 }
-
                 audioSource.PlayOneShot(collectSound);
                 await deflateSequence.Play().AsyncWaitForCompletion();
 
-                // Sequence inflateSequence = DOTween.Sequence();
-                // foreach(Tile connectedTile in connectedTiles)
-                // {
-                //     connectedTile.Item = ItemDatabase.GetRandomItem();
-                //     while (tile.GetConnectedTiles().Count > 2)
-                //     {
-                //         tile.Item = ItemDatabase.GetRandomItem();
-                //     }
-                //     Animate.Spawn(connectedTile, inflateSequence);
-                // }
-                // await inflateSequence.Play().AsyncWaitForCompletion();
-
-                // x = 0; y = 0;
+                foreach(Tile connectedTile in connectedTiles)
+                {
+                    ScoreCounter.Instance.Score += ItemDatabase.GetItemValue(connectedTile.Type);
+                    connectedTile.Type = Item.Types.NONE;
+                }
             }
         }
         await Fall();
+        await FillBlanks();
     }
 
     private async Task Fall()
     {
+        bool hasFallenItem = false;
         for (int x = 0; x < Width; x++)
         {
             Tile blankTile = null;
@@ -195,8 +158,9 @@ public sealed class Board : MonoBehaviour
                 if (!tile.IsNone() && blankTile != null)
                 {
                     y = blankTile.y;
-                    await Swap(tile, blankTile, 6);
+                    await AsyncSwap(tile, blankTile, 6);
                     blankTile = null;
+                    hasFallenItem = true;
                 }
                 else if (tile.IsNone() && blankTile == null)
                 {
@@ -204,5 +168,47 @@ public sealed class Board : MonoBehaviour
                 }
             }
         }
+
+        if (hasFallenItem) await Pop();
+    }
+
+    private async Task FillBlanks()
+    {
+        Sequence inflateSequence = DOTween.Sequence();
+        foreach(Tile tile in Tiles)
+        {
+            if (!tile.IsNone()) continue;
+            tile.Type = ItemDatabase.GetRandomItem().type;
+            while (tile.GetConnectedTiles().Count > 2)
+            {
+                tile.Type = ItemDatabase.GetRandomItem().type;
+            }
+            Animate.Spawn(tile, inflateSequence);
+        }
+        await inflateSequence.Play().AsyncWaitForCompletion();
+    }
+
+
+    public void SwapData(Tile tile1, Tile tile2)
+    {
+        // persistance variables
+        Item.Types item1 = tile1.Type;
+        Item.Types item2 = tile2.Type;
+        Image icon1 = tile1.icon;
+        Image icon2 = tile2.icon;
+        Transform icon1Transform = icon1.transform;
+        Transform icon2Transform = icon2.transform;
+
+        // swap parents
+        icon1Transform.SetParent(tile2.transform);
+        icon2Transform.SetParent(tile1.transform);
+
+        // swap icons
+        tile1.icon = icon2;
+        tile2.icon = icon1;
+
+        // swap types
+        tile1.Type = item2;
+        tile2.Type = item1;
     }
 }

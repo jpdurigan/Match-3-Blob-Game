@@ -8,7 +8,7 @@ public sealed class Tile : MonoBehaviour
     public int x;
     public int y;
 
-    private Item.Types _type;
+    private Item.Types _type = Item.Types.NONE;
     public Item.Types Type
     {
         get
@@ -20,12 +20,30 @@ public sealed class Tile : MonoBehaviour
         {
             if (_type == value) return;
             _type = value;
-            icon.sprite = ItemDatabase.GetItemSprite(_type);
+
+            Sprite sprite = ItemDatabase.GetItemSprite(_type);
+            if (sprite != null) _icon.sprite = sprite;
+            else _icon.sprite = emptySprite;
+            // _icon.sprite = ItemDatabase.GetItemSprite(_type);
         }
     }
 
-    public Image icon;
-    public Button button;
+    private Image _icon;
+    public Image icon
+    {
+        get
+        {
+            return _icon;
+        }
+        
+        set
+        {
+            _icon = value;
+            button.targetGraphic = _icon;
+        }
+    }
+    private Button button;
+    [SerializeField] private Sprite emptySprite;
 
     public Tile Left => Board.Instance.GetTile(x - 1, y);
     public Tile Right => Board.Instance.GetTile(x + 1, y);
@@ -42,6 +60,8 @@ public sealed class Tile : MonoBehaviour
 
     private void Start()
     {
+        button = GetComponent<Button>();
+        _icon = GetComponentsInChildren<Image>()[1];
         button.onClick.AddListener(() => Board.Instance.Select(this));
     }
 

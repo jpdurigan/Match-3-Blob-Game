@@ -205,8 +205,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 0
   y: 0
-  icon: {fileID: 8418853138691158359}
-  button: {fileID: 5414039903666482485}
+  emptySprite: {fileID: 21300000, guid: cbd15aa6d354e4cd182c03a410a17067, type: 3}
 --- !u!222 &5701855685202785720
 CanvasRenderer:
   m_ObjectHideFlags: 0
