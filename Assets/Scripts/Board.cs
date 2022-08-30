@@ -101,7 +101,7 @@ public sealed class Board : MonoBehaviour
         _selection.Clear();
     }
 
-    public async Task Swap(Tile tile1, Tile tile2)
+    public async Task Swap(Tile tile1, Tile tile2, float animSpeed = 1f)
     {
         // persistance variables
         Item.Types item1 = tile1.Type;
@@ -112,7 +112,7 @@ public sealed class Board : MonoBehaviour
         Transform icon2Transform = icon2.transform;
 
         // animate movement
-        await Animate.AsyncSwap(tile1, tile2);
+        await Animate.AsyncSwap(tile1, tile2, animSpeed);
 
         // swap parents
         icon1Transform.SetParent(tile2.transform);
@@ -195,7 +195,7 @@ public sealed class Board : MonoBehaviour
                 if (!tile.IsNone() && blankTile != null)
                 {
                     y = blankTile.y;
-                    await Swap(tile, blankTile);
+                    await Swap(tile, blankTile, 6);
                     blankTile = null;
                 }
                 else if (tile.IsNone() && blankTile == null)
