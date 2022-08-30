@@ -41,10 +41,10 @@ public sealed class Board : MonoBehaviour
                 tile.y = y;
                 
                 Tiles[x, y] = tile;
-                tile.Item = ItemDatabase.GetRandomItem();
+                tile.Type = ItemDatabase.GetRandomItem().type;
                 while (tile.GetConnectedTiles().Count > 2)
                 {
-                    tile.Item = ItemDatabase.GetRandomItem();
+                    tile.Type = ItemDatabase.GetRandomItem().type;
                 }
             }
         }
@@ -104,8 +104,8 @@ public sealed class Board : MonoBehaviour
     public async Task Swap(Tile tile1, Tile tile2)
     {
         // persistance variables
-        Item item1 = tile1.Item;
-        Item item2 = tile2.Item;
+        Item.Types item1 = tile1.Type;
+        Item.Types item2 = tile2.Type;
         Image icon1 = tile1.icon;
         Image icon2 = tile2.icon;
         Transform icon1Transform = icon1.transform;
@@ -123,8 +123,8 @@ public sealed class Board : MonoBehaviour
         tile2.icon = icon1;
 
         // swap items
-        tile1.Item = item2;
-        tile2.Item = item1;
+        tile1.Type = item2;
+        tile2.Type = item1;
     }
 
     private bool CanPop()
@@ -152,31 +152,56 @@ public sealed class Board : MonoBehaviour
             {
                 Tile tile = Tiles[x, y];
                 List<Tile> connectedTiles = tile.GetConnectedTiles();
-                if (connectedTiles.Count <= 2) continue;
+                if (tile.IsNone() || connectedTiles.Count <= 2) continue;
 
                 Sequence deflateSequence = DOTween.Sequence();
                 foreach(Tile connectedTile in connectedTiles)
                 {
+                    Debug.Log($"killing {connectedTile} | type: {connectedTile.Type}");
                     Animate.Kill(connectedTile, deflateSequence);
-                    ScoreCounter.Instance.Score += connectedTile.Item.value;
+                    ScoreCounter.Instance.Score += ItemDatabase.GetItemValue(connectedTile.Type);
+                    connectedTile.Type = Item.Types.NONE;
                 }
 
                 audioSource.PlayOneShot(collectSound);
                 await deflateSequence.Play().AsyncWaitForCompletion();
 
-                Sequence inflateSequence = DOTween.Sequence();
-                foreach(Tile connectedTile in connectedTiles)
-                {
-                    connectedTile.Item = ItemDatabase.GetRandomItem();
-                    while (tile.GetConnectedTiles().Count > 2)
-                    {
-                        tile.Item = ItemDatabase.GetRandomItem();
-                    }
-                    Animate.Spawn(connectedTile, inflateSequence);
-                }
-                await inflateSequence.Play().AsyncWaitForCompletion();
+                // Sequence inflateSequence = DOTween.Sequence();
+                // foreach(Tile connectedTile in connectedTiles)
+                // {
+                //     connectedTile.Item = ItemDatabase.GetRandomItem();
+                //     while (tile.GetConnectedTiles().Count > 2)
+                //     {
+                //         tile.Item = ItemDatabase.GetRandomItem();
+                //     }
+                //     Animate.Spawn(connectedTile, inflateSequence);
+                // }
+                // await inflateSequence.Play().AsyncWaitForCompletion();
 
-                x = 0; y = 0;
+                // x = 0; y = 0;
+            }
+        }
+        await Fall();
+    }
+
+    private async Task Fall()
+    {
+        for (int x = 0; x < Width; x++)
+        {
+            Tile blankTile = null;
+            for (int y = Height - 1; y >= 0f; y--)
+            {
+                Tile tile = Tiles[x, y];
+                if (!tile.IsNone() && blankTile != null)
+                {
+                    y = blankTile.y;
+                    await Swap(tile, blankTile);
+                    blankTile = null;
+                }
+                else if (tile.IsNone() && blankTile == null)
+                {
+                    blankTile = tile;
+                }
             }
         }
     }

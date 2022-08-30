@@ -8,25 +8,23 @@ public sealed class Tile : MonoBehaviour
     public int x;
     public int y;
 
-    private Item _item;
-    public Item Item
+    private Item.Types _type;
+    public Item.Types Type
     {
         get
         {
-            return _item;
+            return _type;
         }
 
         set
         {
-            if (_item == value) return;
-            _item = value;
-            icon.sprite = _item.sprite;
+            if (_type == value) return;
+            _type = value;
+            icon.sprite = ItemDatabase.GetItemSprite(_type);
         }
     }
 
-
     public Image icon;
-
     public Button button;
 
     public Tile Left => Board.Instance.GetTile(x - 1, y);
@@ -55,12 +53,17 @@ public sealed class Tile : MonoBehaviour
         {
             if (tile == null) continue;
             if (tiles.Contains(tile)) continue;
-            if (tile.Item != Item) continue;
+            if (tile.Type != Type) continue;
 
             tiles.Add(tile);
             tile.GetConnectedTiles(tiles);
         }
         
         return tiles;
+    }
+
+    public bool IsNone()
+    {
+        return Type == Item.Types.NONE;
     }
 }

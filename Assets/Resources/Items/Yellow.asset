@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f68cb13366864e2da861f50a874bde3, type: 3}
   m_Name: Yellow
   m_EditorClassIdentifier: 
+  type: 4
   value: 20
   sprite: {fileID: 21300000, guid: 623b407485ffe4d36b8d292ef678198e, type: 3}
   weight: 1
