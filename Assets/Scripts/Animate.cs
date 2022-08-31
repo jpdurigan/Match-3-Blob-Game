@@ -27,9 +27,13 @@ public static class Animate
     public static void Swap(Tile tile1, Tile tile2, Sequence sequence, float speed = 1f)
     {
         Transform tile1Transform = tile1.icon.transform;
+        Transform eyes1Transform = tile1.eyes.transform;
         Transform tile2Transform = tile2.icon.transform;
+        Transform eyes2Transform = tile2.eyes.transform;
         sequence.Insert(0f, tile1Transform.DOMove(tile2Transform.position, TWEEN_DURATION / speed))
-                .Insert(0f, tile2Transform.DOMove(tile1Transform.position, TWEEN_DURATION / speed));
+                .Insert(0f, eyes1Transform.DOMove(eyes2Transform.position, TWEEN_DURATION / speed))
+                .Insert(0f, tile2Transform.DOMove(tile1Transform.position, TWEEN_DURATION / speed))
+                .Insert(0f, eyes2Transform.DOMove(eyes1Transform.position, TWEEN_DURATION / speed));
     }
 
     public static void Select(Tile tile, Sequence sequence, float speed = 1f)

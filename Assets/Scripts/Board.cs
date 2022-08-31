@@ -274,16 +274,22 @@ public sealed class Board : MonoBehaviour
         Image icon2 = tile2.icon;
         Transform icon1Transform = icon1.transform;
         Transform icon2Transform = icon2.transform;
+        Image eyes1 = tile1.eyes;
+        Image eyes2 = tile2.eyes;
+        Transform eyes1Transform = eyes1.transform;
+        Transform eyes2Transform = eyes2.transform;
 
         // swap parents
         icon1Transform.SetParent(tile2.transform);
-        icon1Transform.SetAsFirstSibling();
+        eyes1Transform.SetParent(tile2.transform);
         icon2Transform.SetParent(tile1.transform);
-        icon2Transform.SetAsFirstSibling();
+        eyes2Transform.SetParent(tile1.transform);
 
         // swap icons
         tile1.icon = icon2;
         tile2.icon = icon1;
+        tile1.eyes = eyes2;
+        tile2.eyes = eyes1;
 
         // swap types
         tile1.Type = item2;

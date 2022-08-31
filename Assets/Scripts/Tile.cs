@@ -48,7 +48,7 @@ public sealed class Tile : MonoBehaviour
     }
     private Button button;
     [SerializeField] private Sprite emptySprite;
-    [SerializeField] private Image eyes;
+    public Image eyes;
 
     [HideInInspector] public Tile TopLeft;
     [HideInInspector] public Tile Top;
