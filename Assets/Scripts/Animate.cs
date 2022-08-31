@@ -42,6 +42,14 @@ public static class Animate
         sequence.Insert(0f, tile.icon.transform.DOScale(SCALE_ALIVE, TWEEN_DURATION / speed));
     }
 
+    public static void Error(Tile tile, Sequence sequence, float speed = 1f)
+    {
+        float tweenDuration = TWEEN_DURATION / speed;
+        float ratio = 0.2f;
+        sequence.Insert(0f, tile.icon.transform.DOScale(SCALE_SELECTED, tweenDuration * ratio).SetEase(Ease.OutBack))
+                .Insert(tweenDuration * ratio, tile.icon.transform.DOScale(SCALE_ALIVE, tweenDuration * (1f - ratio)).SetEase(Ease.OutBounce));
+    }
+
 
 
     public static async Task AsyncSwap(Tile tile1, Tile tile2, float speed = 1f)
@@ -64,6 +72,13 @@ public static class Animate
     {
         Sequence sequence = DOTween.Sequence();
         Deselect(tile, sequence, speed);
+        await sequence.Play().AsyncWaitForCompletion();
+    }
+
+    public static async Task AsyncError(Tile tile, float speed = 1f)
+    {
+        Sequence sequence = DOTween.Sequence();
+        Error(tile, sequence, speed);
         await sequence.Play().AsyncWaitForCompletion();
     }
 }

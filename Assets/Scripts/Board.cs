@@ -21,6 +21,7 @@ public sealed class Board : MonoBehaviour
     public int Height => Tiles.GetLength(1);
 
     private List<Tile> _selection = new List<Tile>();
+    private bool shouldBlockSelection = false;
 
     private void Awake()
     {
@@ -60,10 +61,14 @@ public sealed class Board : MonoBehaviour
 
     public async void Select(Tile tile)
     {
+        if (shouldBlockSelection) return;
+        shouldBlockSelection = true;
+
         if (_selection.Contains(tile))
         {
             _selection.Remove(tile);
             await Animate.AsyncDeselect(tile);
+            shouldBlockSelection = false;
             return;
         }
 
@@ -71,13 +76,22 @@ public sealed class Board : MonoBehaviour
         {
             Tile selectedTile = _selection[0];
             bool isValidSelect = selectedTile.Neighbours.Contains(tile);
-            if (!isValidSelect) return;
+            if (!isValidSelect)
+            {
+                await Animate.AsyncError(tile);
+                shouldBlockSelection = false;
+                return;
+            }
         }
 
         _selection.Add(tile);
         await Animate.AsyncSelect(tile);
 
-        if (_selection.Count < 2) return;
+        if (_selection.Count < 2)
+        {
+            shouldBlockSelection = false;
+            return;
+        }
 
         await AsyncSwap(_selection[0], _selection[1]);
 
@@ -91,6 +105,7 @@ public sealed class Board : MonoBehaviour
         }
 
         _selection.Clear();
+        shouldBlockSelection = false;
     }
 
     public async Task AsyncSwap(Tile tile1, Tile tile2, float animSpeed = 1f)

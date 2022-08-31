@@ -25,8 +25,7 @@ public sealed class Tile : MonoBehaviour
             if (sprite != null) _icon.sprite = sprite;
             else _icon.sprite = emptySprite;
 
-            OnTypeChanged();
-            // _icon.sprite = ItemDatabase.GetItemSprite(_type);
+            if (wasInitialized) OnTypeChanged();
         }
     }
 
