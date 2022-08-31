@@ -25,6 +25,7 @@ public sealed class Board : MonoBehaviour
     
     [Header("Audio")]
     [SerializeField] private AudioClip collectSound;
+    [SerializeField] private AudioClip slimeKillSound;
     [SerializeField] private AudioSource audioSource;
 
     private void Awake()
@@ -55,8 +56,8 @@ public sealed class Board : MonoBehaviour
         SpawnPlayer();
         #pragma warning disable CS4014
         FillBlanks();
-        #pragma warning restore CS4014
         UpdateVisuals();
+        #pragma warning restore CS4014
     }
 
     public Tile GetTile(int x, int y)
@@ -184,7 +185,7 @@ public sealed class Board : MonoBehaviour
         }
 
         if (hasFallenItem) await Pop();
-        UpdateVisuals();
+        await UpdateVisuals();
     }
 
     private async Task FillBlanks()
@@ -211,9 +212,10 @@ public sealed class Board : MonoBehaviour
         }
     }
 
-    private void UpdateVisuals()
+    private async Task UpdateVisuals()
     {
-        List<List<Tile>> slimes = new List<List<Tile>>();
+        List<Tile> slimes = null;
+        List<List<Tile>> allSlimes = new List<List<Tile>>();
 
         foreach(Tile tile in Tiles)
         {
@@ -221,16 +223,40 @@ public sealed class Board : MonoBehaviour
             if (tile.IsSlime())
             {
                 List<Tile> connectedTiles = tile.GetConnectedTiles();
-                if (!slimes.Contains(connectedTiles)) slimes.Add(connectedTiles);
+                if (allSlimes.Contains(connectedTiles)) continue;
+                
+                allSlimes.Add(connectedTiles);
+                if (slimes == null || connectedTiles.Count > slimes.Count) slimes = connectedTiles;
             }
         }
 
-        if (slimes.Count > 1)
+        if (allSlimes.Count > 1)
         {
-            throw new System.MissingMethodException();
+            allSlimes.Remove(slimes);
+
+            Sequence deflateSequence = DOTween.Sequence();
+            foreach(List<Tile> connectedSlime in allSlimes)
+            {
+                foreach(Tile connectedTile in connectedSlime)
+                {
+                    Animate.Kill(connectedTile, deflateSequence);
+                }
+            }
+            audioSource.PlayOneShot(slimeKillSound);
+            await deflateSequence.Play().AsyncWaitForCompletion();
+
+            foreach(List<Tile> connectedSlime in allSlimes)
+            {
+                foreach(Tile connectedTile in connectedSlime)
+                {
+                    connectedTile.Type = Item.Types.NONE;
+                }
+            }
+            await Fall();
+            await FillBlanks();
         }
 
-        Tile centerSlime = GetCenterTile(slimes[0]);
+        Tile centerSlime = GetCenterTile(slimes);
         centerSlime.ShowEyes();
     }
 

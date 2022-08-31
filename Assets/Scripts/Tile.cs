@@ -155,6 +155,7 @@ public sealed class Tile : MonoBehaviour
         if (tiles == null) tiles = new List<Tile>();
 
         ConnectedTiles = tiles;
+        if (!tiles.Contains(this)) tiles.Add(this);
         foreach(Tile tile in Neighbours)
         {
             if (tile == null) continue;
