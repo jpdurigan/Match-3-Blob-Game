@@ -39,10 +39,12 @@ public sealed class Board : MonoBehaviour
 
                 tile.x = x;
                 tile.y = y;
-                
                 Tiles[x, y] = tile;
-                tile.Type = Item.Types.NONE;
             }
+        }
+        foreach(Tile tile in Tiles)
+        {
+            tile.Initialize();
         }
 
         #pragma warning disable CS4014

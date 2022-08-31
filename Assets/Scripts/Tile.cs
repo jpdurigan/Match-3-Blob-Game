@@ -24,6 +24,8 @@ public sealed class Tile : MonoBehaviour
             Sprite sprite = ItemDatabase.GetItemSprite(_type);
             if (sprite != null) _icon.sprite = sprite;
             else _icon.sprite = emptySprite;
+
+            OnTypeChanged();
             // _icon.sprite = ItemDatabase.GetItemSprite(_type);
         }
     }
@@ -45,17 +47,14 @@ public sealed class Tile : MonoBehaviour
     private Button button;
     [SerializeField] private Sprite emptySprite;
 
-    public Tile Left => Board.Instance.GetTile(x - 1, y);
-    public Tile Right => Board.Instance.GetTile(x + 1, y);
-    public Tile Top => Board.Instance.GetTile(x, y - 1);
-    public Tile Bottom => Board.Instance.GetTile(x, y + 1);
-    public Tile[] Neighbours => new[]
-    {
-        Left,
-        Top,
-        Right,
-        Bottom,
-    };
+    public Tile Left;
+    public Tile Right;
+    public Tile Top;
+    public Tile Bottom;
+    public Tile[] Neighbours;
+    private List<Tile> ConnectedTiles = null;
+
+    private bool wasInitialized = false;
 
 
     private void Start()
@@ -65,10 +64,45 @@ public sealed class Tile : MonoBehaviour
         button.onClick.AddListener(() => Board.Instance.Select(this));
     }
 
-    public List<Tile> GetConnectedTiles(List<Tile> tiles = null)
+    public void Initialize()
+    {
+        Left = Board.Instance.GetTile(x - 1, y);
+        Right = Board.Instance.GetTile(x + 1, y);
+        Top = Board.Instance.GetTile(x, y - 1);
+        Bottom = Board.Instance.GetTile(x, y + 1);
+        Neighbours = new[]
+        {
+            Left,
+            Top,
+            Right,
+            Bottom,
+        };
+        Type = Item.Types.NONE;
+
+        wasInitialized = true;
+    }
+
+    public List<Tile> GetConnectedTiles()
+    {
+        if (ConnectedTiles == null) UpdateConnectedTilesRecursive();
+        return ConnectedTiles;
+    }
+
+    private void OnTypeChanged()
+    {
+        UpdateConnectedTilesRecursive();
+        foreach(Tile neighbour in Neighbours)
+        {
+            if (neighbour == null || ConnectedTiles.Contains(neighbour)) continue;
+            neighbour.UpdateConnectedTilesRecursive();
+        }
+    }
+
+    private void UpdateConnectedTilesRecursive(List<Tile> tiles = null)
     {
         if (tiles == null) tiles = new List<Tile>();
 
+        ConnectedTiles = tiles;
         foreach(Tile tile in Neighbours)
         {
             if (tile == null) continue;
@@ -76,10 +110,8 @@ public sealed class Tile : MonoBehaviour
             if (tile.Type != Type) continue;
 
             tiles.Add(tile);
-            tile.GetConnectedTiles(tiles);
+            tile.UpdateConnectedTilesRecursive(tiles);
         }
-        
-        return tiles;
     }
 
     public bool IsNone()
