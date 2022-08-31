@@ -21,7 +21,10 @@ public sealed class Tile : MonoBehaviour
             if (_type == value) return;
             _type = value;
 
-            Sprite sprite = ItemDatabase.GetItemSprite(_type);
+            Sprite sprite;
+            if (_type == Item.Types.SLIME) sprite = Slime.Instance.GetSprite(this);
+            else sprite = ItemDatabase.GetItemSprite(_type);
+            
             if (sprite != null) _icon.sprite = sprite;
             else _icon.sprite = emptySprite;
 
@@ -46,9 +49,12 @@ public sealed class Tile : MonoBehaviour
     private Button button;
     [SerializeField] private Sprite emptySprite;
 
+    public Tile TopLeft;
+    public Tile Top;
+    public Tile TopRight;
     public Tile Left;
     public Tile Right;
-    public Tile Top;
+    public Tile BottomLeft;
     public Tile Bottom;
     public Tile BottomRight;
     public Tile[] Neighbours;
@@ -66,18 +72,17 @@ public sealed class Tile : MonoBehaviour
 
     public void Initialize()
     {
-        Left = Board.Instance.GetTile(x - 1, y);
-        Right = Board.Instance.GetTile(x + 1, y);
-        Top = Board.Instance.GetTile(x, y - 1);
-        Bottom = Board.Instance.GetTile(x, y + 1);
-        BottomRight = Board.Instance.GetTile(x + 1, y + 1);
-        Neighbours = new[]
-        {
-            Left,
-            Top,
-            Right,
-            Bottom,
-        };
+        TopLeft =       Board.Instance.GetTile(x - 1, y - 1);
+        Top =           Board.Instance.GetTile(x    , y - 1);
+        TopRight =      Board.Instance.GetTile(x + 1, y - 1);
+        Left =          Board.Instance.GetTile(x - 1, y);
+        Right =         Board.Instance.GetTile(x + 1, y);
+        BottomLeft =    Board.Instance.GetTile(x - 1, y + 1);
+        Bottom =        Board.Instance.GetTile(x    , y + 1);
+        BottomRight =   Board.Instance.GetTile(x + 1, y + 1);
+
+        Neighbours = new[]{ Left, Top, Right, Bottom };
+
         Type = Item.Types.NONE;
 
         wasInitialized = true;

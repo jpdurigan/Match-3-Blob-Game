@@ -10,18 +10,22 @@ public sealed class Board : MonoBehaviour
 {
     public static Board Instance { get; private set; }
 
-    [SerializeField] private AudioClip collectSound;
-    [SerializeField] private AudioSource audioSource;
 
+    [Header("Game")]
     public Row[] rows;
 
     public Tile[,] Tiles { get; private set; }
+    [SerializeField] Vector2Int[] playerSpawn;
 
     public int Width => Tiles.GetLength(dimension:0);
     public int Height => Tiles.GetLength(1);
 
     private List<Tile> _selection = new List<Tile>();
     private bool shouldBlockSelection = false;
+    
+    [Header("Audio")]
+    [SerializeField] private AudioClip collectSound;
+    [SerializeField] private AudioSource audioSource;
 
     private void Awake()
     {
@@ -48,6 +52,7 @@ public sealed class Board : MonoBehaviour
             tile.Initialize();
         }
 
+        SpawnPlayer();
         #pragma warning disable CS4014
         FillBlanks();
         #pragma warning restore CS4014
@@ -62,6 +67,7 @@ public sealed class Board : MonoBehaviour
     public async void Select(Tile tile)
     {
         if (shouldBlockSelection) return;
+        if (tile.Type == Item.Types.SLIME) return;
         shouldBlockSelection = true;
 
         if (_selection.Contains(tile))
@@ -193,6 +199,14 @@ public sealed class Board : MonoBehaviour
             Animate.Spawn(tile, inflateSequence);
         }
         await inflateSequence.Play().AsyncWaitForCompletion();
+    }
+
+    private void SpawnPlayer()
+    {
+        foreach(Vector2Int position in playerSpawn)
+        {
+            Tiles[position.x, position.y].Type = Item.Types.SLIME;
+        }
     }
 
 
