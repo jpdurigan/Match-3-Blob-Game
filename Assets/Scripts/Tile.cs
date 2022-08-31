@@ -21,14 +21,14 @@ public sealed class Tile : MonoBehaviour
             if (_type == value) return;
             _type = value;
 
-            Sprite sprite;
-            if (_type == Item.Types.SLIME) sprite = Slime.Instance.GetSprite(this);
-            else sprite = ItemDatabase.GetItemSprite(_type);
-            
+            if (wasInitialized) OnTypeChanged();
+
+            // update visuals
+            if (_type == Item.Types.SLIME) return; // slimes are updated every round
+            Sprite sprite = ItemDatabase.GetItemSprite(_type);
             if (sprite != null) _icon.sprite = sprite;
             else _icon.sprite = emptySprite;
 
-            if (wasInitialized) OnTypeChanged();
         }
     }
 
@@ -96,6 +96,7 @@ public sealed class Tile : MonoBehaviour
 
     public bool ShouldDestroy()
     {
+        if (IsSlime()) return false;
         bool shouldDestroy = false;
 
         // has 3 horizontal
@@ -121,6 +122,12 @@ public sealed class Tile : MonoBehaviour
         if (shouldDestroy) return shouldDestroy;
 
         return shouldDestroy;
+    }
+
+    public void UpdateSlimeSprite()
+    {
+        if (!IsSlime()) return;
+        _icon.sprite = Slime.Instance.GetSprite(this);
     }
 
     private void OnTypeChanged()
@@ -152,5 +159,10 @@ public sealed class Tile : MonoBehaviour
     public bool IsNone()
     {
         return Type == Item.Types.NONE;
+    }
+
+    public bool IsSlime()
+    {
+        return Type == Item.Types.SLIME;
     }
 }

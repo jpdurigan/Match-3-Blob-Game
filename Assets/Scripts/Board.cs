@@ -183,6 +183,7 @@ public sealed class Board : MonoBehaviour
         }
 
         if (hasFallenItem) await Pop();
+        UpdateSlimeTiles();
     }
 
     private async Task FillBlanks()
@@ -206,6 +207,15 @@ public sealed class Board : MonoBehaviour
         foreach(Vector2Int position in playerSpawn)
         {
             Tiles[position.x, position.y].Type = Item.Types.SLIME;
+        }
+        UpdateSlimeTiles();
+    }
+
+    private void UpdateSlimeTiles()
+    {
+        foreach(Tile tile in Tiles)
+        {
+            tile.UpdateSlimeSprite();
         }
     }
 

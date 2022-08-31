@@ -374,6 +374,10 @@ MonoBehaviour:
   - {fileID: 1099920371}
   playerSpawn:
   - {x: 3, y: 3}
+  - {x: 2, y: 3}
+  - {x: 4, y: 3}
+  - {x: 3, y: 2}
+  - {x: 3, y: 4}
   collectSound: {fileID: 8300000, guid: 4a44e878dfc90453da85403ccd9c70cc, type: 3}
   audioSource: {fileID: 95861886}
 --- !u!82 &95861886
@@ -2320,7 +2324,304 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17b63d24592d24e0ea3eef288c976ee1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sprites: []
+  sprites:
+  - sprite: {fileID: -687829603, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 1
+    Top: 1
+    TopRight: 1
+    Left: 1
+    Right: 1
+    BottomLeft: 1
+    Bottom: 1
+    BottomRight: 1
+  - sprite: {fileID: -1298363219, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: -1
+    Top: -1
+    TopRight: -1
+    Left: -1
+    Right: -1
+    BottomLeft: -1
+    Bottom: -1
+    BottomRight: -1
+  - sprite: {fileID: 269762178, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: -1
+    Top: 1
+    TopRight: -1
+    Left: 1
+    Right: 1
+    BottomLeft: -1
+    Bottom: 1
+    BottomRight: -1
+  - sprite: {fileID: 812300610, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 0
+    Top: -1
+    TopRight: 0
+    Left: 1
+    Right: 1
+    BottomLeft: -1
+    Bottom: 1
+    BottomRight: -1
+  - sprite: {fileID: 1083165180, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 0
+    Top: 1
+    TopRight: -1
+    Left: -1
+    Right: 1
+    BottomLeft: 0
+    Bottom: 1
+    BottomRight: -1
+  - sprite: {fileID: -130234350, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: -1
+    Top: 1
+    TopRight: 0
+    Left: 1
+    Right: -1
+    BottomLeft: -1
+    Bottom: 1
+    BottomRight: 0
+  - sprite: {fileID: -1883416822, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: -1
+    Top: 1
+    TopRight: -1
+    Left: 1
+    Right: 1
+    BottomLeft: 0
+    Bottom: -1
+    BottomRight: 0
+  - sprite: {fileID: 1285796268, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: -1
+    Top: 1
+    TopRight: -1
+    Left: 1
+    Right: 1
+    BottomLeft: 1
+    Bottom: 1
+    BottomRight: 1
+  - sprite: {fileID: -1719401162, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: -1
+    Top: 1
+    TopRight: 1
+    Left: 1
+    Right: 1
+    BottomLeft: -1
+    Bottom: 1
+    BottomRight: 1
+  - sprite: {fileID: 1904107570, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: -1
+    Top: 1
+    TopRight: 1
+    Left: 1
+    Right: 1
+    BottomLeft: -1
+    Bottom: 1
+    BottomRight: 1
+  - sprite: {fileID: -1078299680, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 1
+    Top: 1
+    TopRight: 1
+    Left: 1
+    Right: 1
+    BottomLeft: -1
+    Bottom: 1
+    BottomRight: -1
+  - sprite: {fileID: 71684821, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: -1
+    Top: 1
+    TopRight: 1
+    Left: 1
+    Right: 1
+    BottomLeft: 1
+    Bottom: 1
+    BottomRight: 1
+  - sprite: {fileID: -49918281, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 1
+    Top: 1
+    TopRight: -1
+    Left: 1
+    Right: 1
+    BottomLeft: 1
+    Bottom: 1
+    BottomRight: 1
+  - sprite: {fileID: -539207424, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 1
+    Top: 1
+    TopRight: 1
+    Left: 1
+    Right: 1
+    BottomLeft: -1
+    Bottom: 1
+    BottomRight: 1
+  - sprite: {fileID: -328404376, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 1
+    Top: 1
+    TopRight: 1
+    Left: 1
+    Right: 1
+    BottomLeft: 1
+    Bottom: 1
+    BottomRight: -1
+  - sprite: {fileID: 697634758, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 0
+    Top: -1
+    TopRight: 0
+    Left: -1
+    Right: 1
+    BottomLeft: 0
+    Bottom: 1
+    BottomRight: -1
+  - sprite: {fileID: -1612126442, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 0
+    Top: -1
+    TopRight: 0
+    Left: 1
+    Right: -1
+    BottomLeft: -1
+    Bottom: 1
+    BottomRight: 0
+  - sprite: {fileID: 269246879, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 0
+    Top: 1
+    TopRight: -1
+    Left: -1
+    Right: 1
+    BottomLeft: 0
+    Bottom: -1
+    BottomRight: 0
+  - sprite: {fileID: -641505935, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: -1
+    Top: 1
+    TopRight: 0
+    Left: 1
+    Right: -1
+    BottomLeft: 0
+    Bottom: -1
+    BottomRight: 0
+  - sprite: {fileID: 1378021, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 0
+    Top: -1
+    TopRight: 0
+    Left: -1
+    Right: 1
+    BottomLeft: 0
+    Bottom: 1
+    BottomRight: 1
+  - sprite: {fileID: 1680082753, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 0
+    Top: -1
+    TopRight: 0
+    Left: 1
+    Right: -1
+    BottomLeft: 1
+    Bottom: 1
+    BottomRight: 0
+  - sprite: {fileID: 1934641243, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 0
+    Top: 1
+    TopRight: 1
+    Left: -1
+    Right: 1
+    BottomLeft: 0
+    Bottom: -1
+    BottomRight: 0
+  - sprite: {fileID: 1222462748, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 1
+    Top: 1
+    TopRight: 0
+    Left: 1
+    Right: -1
+    BottomLeft: 0
+    Bottom: -1
+    BottomRight: 0
+  - sprite: {fileID: 1893942830, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 0
+    Top: -1
+    TopRight: 0
+    Left: 1
+    Right: 1
+    BottomLeft: 1
+    Bottom: 1
+    BottomRight: 1
+  - sprite: {fileID: 988627030, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 1
+    Top: 1
+    TopRight: 0
+    Left: 1
+    Right: -1
+    BottomLeft: 1
+    Bottom: 1
+    BottomRight: 0
+  - sprite: {fileID: -446785231, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 1
+    Top: 1
+    TopRight: 0
+    Left: 1
+    Right: -1
+    BottomLeft: 1
+    Bottom: 1
+    BottomRight: 0
+  - sprite: {fileID: -614759386, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 1
+    Top: 1
+    TopRight: 1
+    Left: 1
+    Right: 1
+    BottomLeft: 0
+    Bottom: -1
+    BottomRight: 0
+  - sprite: {fileID: -1517403172, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 0
+    Top: -1
+    TopRight: 0
+    Left: -1
+    Right: -1
+    BottomLeft: 0
+    Bottom: 1
+    BottomRight: 0
+  - sprite: {fileID: 1642895979, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 0
+    Top: 1
+    TopRight: 0
+    Left: -1
+    Right: -1
+    BottomLeft: 0
+    Bottom: 1
+    BottomRight: 0
+  - sprite: {fileID: 1639570745, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 0
+    Top: 1
+    TopRight: 0
+    Left: -1
+    Right: -1
+    BottomLeft: 0
+    Bottom: -1
+    BottomRight: 0
+  - sprite: {fileID: -267100091, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 0
+    Top: -1
+    TopRight: 0
+    Left: -1
+    Right: 1
+    BottomLeft: 0
+    Bottom: -1
+    BottomRight: 0
+  - sprite: {fileID: -1855759703, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 0
+    Top: -1
+    TopRight: 0
+    Left: 1
+    Right: 1
+    BottomLeft: 0
+    Bottom: -1
+    BottomRight: 0
+  - sprite: {fileID: 1036083297, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 0
+    Top: -1
+    TopRight: 0
+    Left: 1
+    Right: -1
+    BottomLeft: 0
+    Bottom: -1
+    BottomRight: 0
   defaultSprite: {fileID: -1298363219, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
 --- !u!4 &1663907098
 Transform:
