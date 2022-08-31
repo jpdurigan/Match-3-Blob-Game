@@ -51,6 +51,7 @@ public sealed class Tile : MonoBehaviour
     public Tile Right;
     public Tile Top;
     public Tile Bottom;
+    public Tile BottomRight;
     public Tile[] Neighbours;
     private List<Tile> ConnectedTiles = null;
 
@@ -70,6 +71,7 @@ public sealed class Tile : MonoBehaviour
         Right = Board.Instance.GetTile(x + 1, y);
         Top = Board.Instance.GetTile(x, y - 1);
         Bottom = Board.Instance.GetTile(x, y + 1);
+        BottomRight = Board.Instance.GetTile(x + 1, y + 1);
         Neighbours = new[]
         {
             Left,
@@ -86,6 +88,35 @@ public sealed class Tile : MonoBehaviour
     {
         if (ConnectedTiles == null) UpdateConnectedTilesRecursive();
         return ConnectedTiles;
+    }
+
+    public bool ShouldDestroy()
+    {
+        bool shouldDestroy = false;
+
+        // has 3 horizontal
+        shouldDestroy = (
+            ConnectedTiles.Contains(Left)
+            && ConnectedTiles.Contains(Right)
+        );
+        if (shouldDestroy) return shouldDestroy;
+
+        // has 3 vertical
+        shouldDestroy = (
+            ConnectedTiles.Contains(Top)
+            && ConnectedTiles.Contains(Bottom)
+        );
+        if (shouldDestroy) return shouldDestroy;
+
+        // has 4 square
+        shouldDestroy = (
+            ConnectedTiles.Contains(Bottom)
+            && ConnectedTiles.Contains(Right)
+            && ConnectedTiles.Contains(BottomRight)
+        );
+        if (shouldDestroy) return shouldDestroy;
+
+        return shouldDestroy;
     }
 
     private void OnTypeChanged()

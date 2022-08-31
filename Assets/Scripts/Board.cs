@@ -105,43 +105,33 @@ public sealed class Board : MonoBehaviour
     private bool CanPop()
     {
         bool canPop = false;
-        for (int y = 0; y < Height; y++)
+        foreach(Tile tile in Tiles)
         {
-            for (int x = 0; x < Width; x++)
-            {
-                if (Tiles[x, y].GetConnectedTiles().Count >= 3)
-                {
-                    canPop = true;
-                    return canPop;
-                }
-            }
+            canPop = tile.ShouldDestroy();
+            if (canPop) break;
         }
         return canPop;
     }
 
     private async Task Pop()
     {
-        for (int y = 0; y < Height; y++)
+        foreach(Tile tile in Tiles)
         {
-            for (int x = 0; x < Width; x++)
+            List<Tile> connectedTiles = tile.GetConnectedTiles();
+            if (tile.IsNone() || !tile.ShouldDestroy()) continue;
+
+            Sequence deflateSequence = DOTween.Sequence();
+            foreach(Tile connectedTile in connectedTiles)
             {
-                Tile tile = Tiles[x, y];
-                List<Tile> connectedTiles = tile.GetConnectedTiles();
-                if (tile.IsNone() || connectedTiles.Count <= 2) continue;
+                Animate.Kill(connectedTile, deflateSequence);
+            }
+            audioSource.PlayOneShot(collectSound);
+            await deflateSequence.Play().AsyncWaitForCompletion();
 
-                Sequence deflateSequence = DOTween.Sequence();
-                foreach(Tile connectedTile in connectedTiles)
-                {
-                    Animate.Kill(connectedTile, deflateSequence);
-                }
-                audioSource.PlayOneShot(collectSound);
-                await deflateSequence.Play().AsyncWaitForCompletion();
-
-                foreach(Tile connectedTile in connectedTiles)
-                {
-                    ScoreCounter.Instance.Score += ItemDatabase.GetItemValue(connectedTile.Type);
-                    connectedTile.Type = Item.Types.NONE;
-                }
+            foreach(Tile connectedTile in connectedTiles)
+            {
+                ScoreCounter.Instance.Score += ItemDatabase.GetItemValue(connectedTile.Type);
+                connectedTile.Type = Item.Types.NONE;
             }
         }
         await Fall();
