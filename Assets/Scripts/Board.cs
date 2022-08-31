@@ -56,6 +56,7 @@ public sealed class Board : MonoBehaviour
         #pragma warning disable CS4014
         FillBlanks();
         #pragma warning restore CS4014
+        UpdateVisuals();
     }
 
     public Tile GetTile(int x, int y)
@@ -183,7 +184,7 @@ public sealed class Board : MonoBehaviour
         }
 
         if (hasFallenItem) await Pop();
-        UpdateSlimeTiles();
+        UpdateVisuals();
     }
 
     private async Task FillBlanks()
@@ -208,15 +209,59 @@ public sealed class Board : MonoBehaviour
         {
             Tiles[position.x, position.y].Type = Item.Types.SLIME;
         }
-        UpdateSlimeTiles();
     }
 
-    private void UpdateSlimeTiles()
+    private void UpdateVisuals()
     {
+        List<List<Tile>> slimes = new List<List<Tile>>();
+
         foreach(Tile tile in Tiles)
         {
-            tile.UpdateSlimeSprite();
+            tile.UpdateVisual();
+            if (tile.IsSlime())
+            {
+                List<Tile> connectedTiles = tile.GetConnectedTiles();
+                if (!slimes.Contains(connectedTiles)) slimes.Add(connectedTiles);
+            }
         }
+
+        if (slimes.Count > 1)
+        {
+            throw new System.MissingMethodException();
+        }
+
+        Tile centerSlime = GetCenterTile(slimes[0]);
+        centerSlime.ShowEyes();
+    }
+
+    private Tile GetCenterTile(List<Tile> tiles)
+    {
+        Vector2 middlePosition = Vector2.zero;
+        foreach(Tile tile in tiles)
+        {
+            Vector2 tilePosition = tile.GetVector2();
+            middlePosition += tilePosition / (float)tiles.Count;
+        }
+        middlePosition.x = Mathf.Floor(middlePosition.x);
+        middlePosition.y = Mathf.Floor(middlePosition.y);
+
+        Tile centerTile = null;
+        float dist = float.MaxValue;
+        foreach(Tile tile in tiles)
+        {
+            float tileDist = (tile.GetVector2() - middlePosition).SqrMagnitude();
+            if (tileDist <= Mathf.Epsilon)
+            {
+                centerTile = tile;
+                break;
+            }
+            else if (tileDist < dist)
+            {
+                centerTile = tile;
+                dist = tileDist;
+            }
+        }
+        return centerTile;
     }
 
 
@@ -232,7 +277,9 @@ public sealed class Board : MonoBehaviour
 
         // swap parents
         icon1Transform.SetParent(tile2.transform);
+        icon1Transform.SetAsFirstSibling();
         icon2Transform.SetParent(tile1.transform);
+        icon2Transform.SetAsFirstSibling();
 
         // swap icons
         tile1.icon = icon2;

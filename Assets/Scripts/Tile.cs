@@ -48,16 +48,17 @@ public sealed class Tile : MonoBehaviour
     }
     private Button button;
     [SerializeField] private Sprite emptySprite;
+    [SerializeField] private Image eyes;
 
-    public Tile TopLeft;
-    public Tile Top;
-    public Tile TopRight;
-    public Tile Left;
-    public Tile Right;
-    public Tile BottomLeft;
-    public Tile Bottom;
-    public Tile BottomRight;
-    public Tile[] Neighbours;
+    [HideInInspector] public Tile TopLeft;
+    [HideInInspector] public Tile Top;
+    [HideInInspector] public Tile TopRight;
+    [HideInInspector] public Tile Left;
+    [HideInInspector] public Tile Right;
+    [HideInInspector] public Tile BottomLeft;
+    [HideInInspector] public Tile Bottom;
+    [HideInInspector] public Tile BottomRight;
+    [HideInInspector] public Tile[] Neighbours;
     private List<Tile> ConnectedTiles = null;
 
     private bool wasInitialized = false;
@@ -124,10 +125,19 @@ public sealed class Tile : MonoBehaviour
         return shouldDestroy;
     }
 
-    public void UpdateSlimeSprite()
+    public void UpdateVisual()
     {
+        eyes.enabled = false;
+        button.enabled = true;
         if (!IsSlime()) return;
+
         _icon.sprite = Slime.Instance.GetSprite(this);
+        button.enabled = false;
+    }
+
+    public void ShowEyes()
+    {
+        eyes.enabled = true;
     }
 
     private void OnTypeChanged()
@@ -164,5 +174,10 @@ public sealed class Tile : MonoBehaviour
     public bool IsSlime()
     {
         return Type == Item.Types.SLIME;
+    }
+
+    public Vector2 GetVector2()
+    {
+        return new Vector2((float)x, (float)y);
     }
 }
