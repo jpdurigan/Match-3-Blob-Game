@@ -10,6 +10,15 @@ public sealed class Board : MonoBehaviour
 {
     public static Board Instance { get; private set; }
 
+    private enum Jobs
+    {
+        HANDLE_MATCHES,
+        HANDLE_FLOATING,
+        HANDLE_SLIME,
+        HANDLE_BLANK,
+        DONE,
+    }
+
 
     [Header("Game")]
     public Row[] rows;
@@ -27,6 +36,11 @@ public sealed class Board : MonoBehaviour
     [SerializeField] private AudioClip collectSound;
     [SerializeField] private AudioClip slimeKillSound;
     [SerializeField] private AudioSource audioSource;
+
+    /////////////////////////////////////////////////////
+    
+
+    //// ENGINE METHODS
 
     private void Awake()
     {
@@ -55,16 +69,15 @@ public sealed class Board : MonoBehaviour
 
         SpawnPlayer();
         #pragma warning disable CS4014
-        FillBlanks();
+        HandleBlankTiles();
         UpdateVisuals();
         #pragma warning restore CS4014
     }
 
-    public Tile GetTile(int x, int y)
-    {
-        if (x < 0 || x >= Width || y < 0 || y >= Height) return null;
-        return Tiles[x, y];
-    }
+    /////////////////////////////////////////////////////
+    
+
+    //// MECHANICS
 
     public async void Select(Tile tile)
     {
@@ -103,9 +116,9 @@ public sealed class Board : MonoBehaviour
 
         await AsyncSwap(_selection[0], _selection[1]);
 
-        if (CanPop())
+        if (HasMatches())
         {
-            await Pop();
+            await HandleGrid();
         }
         else
         {
@@ -116,54 +129,52 @@ public sealed class Board : MonoBehaviour
         shouldBlockSelection = false;
     }
 
-    public async Task AsyncSwap(Tile tile1, Tile tile2, float animSpeed = 1f)
+    private async Task HandleGrid(Jobs job = Jobs.HANDLE_MATCHES)
     {
-        // animate movement
-        await Animate.AsyncSwap(tile1, tile2, animSpeed);
-        // swap data
-        SwapData(tile1, tile2);
-    }
-
-
-    private bool CanPop()
-    {
-        bool canPop = false;
-        foreach(Tile tile in Tiles)
+        bool hasChangedGrid;
+        while (job != Jobs.DONE)
         {
-            canPop = tile.ShouldDestroy();
-            if (canPop) break;
+            switch (job)
+            {
+                case Jobs.HANDLE_MATCHES:
+                    hasChangedGrid = await HandleMatches();
+                    job = hasChangedGrid ? Jobs.HANDLE_FLOATING : Jobs.HANDLE_SLIME;
+                    break;
+                case Jobs.HANDLE_FLOATING:
+                    hasChangedGrid = await HandleFloatingTiles();
+                    job = hasChangedGrid ? Jobs.HANDLE_MATCHES : Jobs.HANDLE_SLIME;
+                    break;
+                case Jobs.HANDLE_SLIME:
+                    hasChangedGrid = await HandleSlimeTiles();
+                    job = hasChangedGrid ? Jobs.HANDLE_FLOATING : Jobs.HANDLE_BLANK;
+                    break;
+                case Jobs.HANDLE_BLANK:
+                    await HandleBlankTiles();
+                    job = Jobs.DONE;
+                    break;
+            }
         }
-        return canPop;
+
+        UpdateVisuals();
     }
 
-    private async Task Pop()
+    private async Task<bool> HandleMatches()
     {
+        bool hasChangedGrid = false;
         foreach(Tile tile in Tiles)
         {
             List<Tile> connectedTiles = tile.GetConnectedTiles();
             if (tile.IsNone() || !tile.ShouldDestroy()) continue;
 
-            Sequence deflateSequence = DOTween.Sequence();
-            foreach(Tile connectedTile in connectedTiles)
-            {
-                Animate.Kill(connectedTile, deflateSequence);
-            }
-            audioSource.PlayOneShot(collectSound);
-            await deflateSequence.Play().AsyncWaitForCompletion();
-
-            foreach(Tile connectedTile in connectedTiles)
-            {
-                ScoreCounter.Instance.Score += ItemDatabase.GetItemValue(connectedTile.Type);
-                connectedTile.Type = Item.Types.NONE;
-            }
+            await KillTiles(connectedTiles, collectSound);
+            hasChangedGrid = true;
         }
-        await Fall();
-        await FillBlanks();
+        return hasChangedGrid;
     }
 
-    private async Task Fall()
+    private async Task<bool> HandleFloatingTiles()
     {
-        bool hasFallenItem = false;
+        bool hasChangedGrid = false;
         for (int x = 0; x < Width; x++)
         {
             Tile blankTile = null;
@@ -175,7 +186,7 @@ public sealed class Board : MonoBehaviour
                     y = blankTile.y;
                     await AsyncSwap(tile, blankTile, 6);
                     blankTile = null;
-                    hasFallenItem = true;
+                    hasChangedGrid = true;
                 }
                 else if (tile.IsNone() && blankTile == null)
                 {
@@ -183,12 +194,43 @@ public sealed class Board : MonoBehaviour
                 }
             }
         }
-
-        if (hasFallenItem) await Pop();
-        await UpdateVisuals();
+        return hasChangedGrid;
     }
 
-    private async Task FillBlanks()
+    private async Task<bool> HandleSlimeTiles()
+    {
+        bool hasChangedGrid = false;
+        List<Tile> biggestSlime = null;
+        List<List<Tile>> allSlimes = new List<List<Tile>>();
+
+        foreach(Tile tile in Tiles)
+        {
+            if (!tile.IsSlime()) continue;
+
+            List<Tile> connectedTiles = tile.GetConnectedTiles();
+            if (allSlimes.Contains(connectedTiles)) continue;
+            
+            allSlimes.Add(connectedTiles);
+            if (biggestSlime == null || connectedTiles.Count > biggestSlime.Count) biggestSlime = connectedTiles;
+        }
+
+        if (allSlimes.Count > 1)
+        {
+            allSlimes.Remove(biggestSlime);
+            List<Tile> slimesToKill = new List<Tile>();
+            foreach(List<Tile> slimeChain in allSlimes)
+            {
+                slimesToKill.AddRange(slimeChain);
+            }
+            await KillTiles(slimesToKill, slimeKillSound);
+            hasChangedGrid = true;
+        }
+
+        return hasChangedGrid;
+    }
+
+
+    private async Task HandleBlankTiles()
     {
         Sequence inflateSequence = DOTween.Sequence();
         foreach(Tile tile in Tiles)
@@ -204,6 +246,19 @@ public sealed class Board : MonoBehaviour
         await inflateSequence.Play().AsyncWaitForCompletion();
     }
 
+    private void UpdateVisuals()
+    {
+        List<Tile> slimeTiles = null;
+        foreach(Tile tile in Tiles)
+        {
+            tile.UpdateVisual();
+            if (tile.IsSlime() && slimeTiles == null) slimeTiles = tile.GetConnectedTiles();
+        }
+
+        Tile centerSlime = GetCenterTile(slimeTiles);
+        centerSlime.ShowEyes();
+    }
+    
     private void SpawnPlayer()
     {
         foreach(Vector2Int position in playerSpawn)
@@ -212,52 +267,26 @@ public sealed class Board : MonoBehaviour
         }
     }
 
-    private async Task UpdateVisuals()
+    private bool HasMatches()
     {
-        List<Tile> slimes = null;
-        List<List<Tile>> allSlimes = new List<List<Tile>>();
-
+        bool hasMatches = false;
         foreach(Tile tile in Tiles)
         {
-            tile.UpdateVisual();
-            if (tile.IsSlime())
-            {
-                List<Tile> connectedTiles = tile.GetConnectedTiles();
-                if (allSlimes.Contains(connectedTiles)) continue;
-                
-                allSlimes.Add(connectedTiles);
-                if (slimes == null || connectedTiles.Count > slimes.Count) slimes = connectedTiles;
-            }
+            hasMatches = tile.ShouldDestroy();
+            if (hasMatches) break;
         }
+        return hasMatches;
+    }
 
-        if (allSlimes.Count > 1)
-        {
-            allSlimes.Remove(slimes);
+    /////////////////////////////////////////////////////
+    
 
-            Sequence deflateSequence = DOTween.Sequence();
-            foreach(List<Tile> connectedSlime in allSlimes)
-            {
-                foreach(Tile connectedTile in connectedSlime)
-                {
-                    Animate.Kill(connectedTile, deflateSequence);
-                }
-            }
-            audioSource.PlayOneShot(slimeKillSound);
-            await deflateSequence.Play().AsyncWaitForCompletion();
+    //// HELPERS
 
-            foreach(List<Tile> connectedSlime in allSlimes)
-            {
-                foreach(Tile connectedTile in connectedSlime)
-                {
-                    connectedTile.Type = Item.Types.NONE;
-                }
-            }
-            await Fall();
-            await FillBlanks();
-        }
-
-        Tile centerSlime = GetCenterTile(slimes);
-        centerSlime.ShowEyes();
+    public Tile GetTile(int x, int y)
+    {
+        if (x < 0 || x >= Width || y < 0 || y >= Height) return null;
+        return Tiles[x, y];
     }
 
     private Tile GetCenterTile(List<Tile> tiles)
@@ -290,8 +319,7 @@ public sealed class Board : MonoBehaviour
         return centerTile;
     }
 
-
-    public void SwapData(Tile tile1, Tile tile2)
+    private void SwapData(Tile tile1, Tile tile2)
     {
         // persistance variables
         Item.Types item1 = tile1.Type;
@@ -321,4 +349,30 @@ public sealed class Board : MonoBehaviour
         tile1.Type = item2;
         tile2.Type = item1;
     }
+
+    private async Task AsyncSwap(Tile tile1, Tile tile2, float animSpeed = 1f)
+    {
+        // animate movement
+        await Animate.AsyncSwap(tile1, tile2, animSpeed);
+        // swap data
+        SwapData(tile1, tile2);
+    }
+
+    private async Task KillTiles(List<Tile> tiles, AudioClip sfx)
+    {
+        Sequence deflateSequence = DOTween.Sequence();
+        foreach(Tile tile in tiles)
+        {
+            Animate.Kill(tile, deflateSequence);
+        }
+        
+        audioSource.PlayOneShot(sfx);
+        await deflateSequence.Play().AsyncWaitForCompletion();
+
+        foreach(Tile tile in tiles)
+        {
+            tile.Type = Item.Types.NONE;
+        }
+    }
+
 }
