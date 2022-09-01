@@ -66,6 +66,11 @@ public sealed class Slime : MonoBehaviour
         return sprite;
     }
 
+    public Sprite GetDefaultSprite()
+    {
+        return defaultSprite;
+    }
+
     private SlimeSprite GetSlimeSpriteFromTile(Tile tile)
     {
         SlimeSprite tileSprite = new SlimeSprite();

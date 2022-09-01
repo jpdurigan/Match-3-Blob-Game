@@ -21,19 +21,16 @@ public static class Animate
 
     public static void Kill(Tile tile, Sequence sequence, float speed = 1f)
     {
-        sequence.Insert(0f, tile.icon.transform.DOScale(SCALE_DEAD, TWEEN_DURATION / speed));
+        sequence.Insert(0f, tile.icon.transform.DOScale(SCALE_DEAD, TWEEN_DURATION / speed))
+                .InsertCallback(TWEEN_DURATION / speed, () => tile.eyes.enabled = false);
     }
 
     public static void Swap(Tile tile1, Tile tile2, Sequence sequence, float speed = 1f)
     {
         Transform tile1Transform = tile1.icon.transform;
-        Transform eyes1Transform = tile1.eyes.transform;
         Transform tile2Transform = tile2.icon.transform;
-        Transform eyes2Transform = tile2.eyes.transform;
         sequence.Insert(0f, tile1Transform.DOMove(tile2Transform.position, TWEEN_DURATION / speed))
-                .Insert(0f, eyes1Transform.DOMove(eyes2Transform.position, TWEEN_DURATION / speed))
-                .Insert(0f, tile2Transform.DOMove(tile1Transform.position, TWEEN_DURATION / speed))
-                .Insert(0f, eyes2Transform.DOMove(eyes1Transform.position, TWEEN_DURATION / speed));
+                .Insert(0f, tile2Transform.DOMove(tile1Transform.position, TWEEN_DURATION / speed));
     }
 
     public static void Select(Tile tile, Sequence sequence, float speed = 1f)
@@ -46,7 +43,7 @@ public static class Animate
         sequence.Insert(0f, tile.icon.transform.DOScale(SCALE_ALIVE, TWEEN_DURATION / speed));
     }
 
-    public static void Error(Tile tile, Sequence sequence, float speed = 1f)
+    public static void Wiggle(Tile tile, Sequence sequence, float speed = 1f)
     {
         float tweenDuration = TWEEN_DURATION / speed;
         float ratio = 0.2f;
@@ -79,10 +76,10 @@ public static class Animate
         await sequence.Play().AsyncWaitForCompletion();
     }
 
-    public static async Task AsyncError(Tile tile, float speed = 1f)
+    public static async Task AsyncWiggle(Tile tile, float speed = 1f)
     {
         Sequence sequence = DOTween.Sequence();
-        Error(tile, sequence, speed);
+        Wiggle(tile, sequence, speed);
         await sequence.Play().AsyncWaitForCompletion();
     }
 }

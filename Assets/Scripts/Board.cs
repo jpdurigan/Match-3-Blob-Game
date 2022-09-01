@@ -70,7 +70,7 @@ public sealed class Board : MonoBehaviour
         SpawnPlayer();
         #pragma warning disable CS4014
         HandleBlankTiles();
-        UpdateVisuals();
+        HandleGridVisual();
         #pragma warning restore CS4014
     }
 
@@ -99,7 +99,7 @@ public sealed class Board : MonoBehaviour
             bool isValidSelect = selectedTile.Neighbours.Contains(tile);
             if (!isValidSelect)
             {
-                await Animate.AsyncError(tile);
+                await Animate.AsyncWiggle(tile);
                 shouldBlockSelection = false;
                 return;
             }
@@ -131,7 +131,16 @@ public sealed class Board : MonoBehaviour
 
     private async Task HandleGrid(Jobs job = Jobs.HANDLE_MATCHES)
     {
-        bool hasChangedGrid;
+        bool hasChangedGrid = false;
+
+        Sequence wiggleSequence = DOTween.Sequence();
+        foreach(Tile tile in Tiles)
+        {
+            tile.OnUpdatingGrid();
+            if (tile.IsSlime()) Animate.Wiggle(tile, wiggleSequence);
+        }
+        await wiggleSequence.Play().AsyncWaitForCompletion();
+
         while (job != Jobs.DONE)
         {
             switch (job)
@@ -155,7 +164,7 @@ public sealed class Board : MonoBehaviour
             }
         }
 
-        UpdateVisuals();
+        await HandleGridVisual();
     }
 
     private async Task<bool> HandleMatches()
@@ -246,14 +255,21 @@ public sealed class Board : MonoBehaviour
         await inflateSequence.Play().AsyncWaitForCompletion();
     }
 
-    private void UpdateVisuals()
+    private async Task HandleGridVisual()
     {
         List<Tile> slimeTiles = null;
+
+        Sequence wiggleSequence = DOTween.Sequence();
         foreach(Tile tile in Tiles)
         {
             tile.UpdateVisual();
-            if (tile.IsSlime() && slimeTiles == null) slimeTiles = tile.GetConnectedTiles();
+            if (tile.IsSlime())
+            {
+                Animate.Wiggle(tile, wiggleSequence);
+                if (slimeTiles == null) slimeTiles = tile.GetConnectedTiles();
+            }
         }
+        await wiggleSequence.Play().AsyncWaitForCompletion();
 
         Tile centerSlime = GetCenterTile(slimeTiles);
         centerSlime.ShowEyes();
@@ -330,14 +346,10 @@ public sealed class Board : MonoBehaviour
         Transform icon2Transform = icon2.transform;
         Image eyes1 = tile1.eyes;
         Image eyes2 = tile2.eyes;
-        Transform eyes1Transform = eyes1.transform;
-        Transform eyes2Transform = eyes2.transform;
 
         // swap parents
         icon1Transform.SetParent(tile2.transform);
-        eyes1Transform.SetParent(tile2.transform);
         icon2Transform.SetParent(tile1.transform);
-        eyes2Transform.SetParent(tile1.transform);
 
         // swap icons
         tile1.icon = icon2;

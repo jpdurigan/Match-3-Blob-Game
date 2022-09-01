@@ -135,6 +135,14 @@ public sealed class Tile : MonoBehaviour
         button.enabled = false;
     }
 
+    public void OnUpdatingGrid()
+    {
+        if (!IsSlime()) return;
+
+        _icon.sprite = Slime.Instance.GetDefaultSprite();
+        eyes.enabled = true;
+    }
+
     public void ShowEyes()
     {
         eyes.enabled = true;
