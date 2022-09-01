@@ -34,6 +34,7 @@ public sealed class Board : MonoBehaviour
     
     [Header("Audio")]
     [SerializeField] private AudioClip collectSound;
+    [SerializeField] private AudioClip slimeSpawnSound;
     [SerializeField] private AudioClip slimeKillSound;
     [SerializeField] private AudioSource audioSource;
 
@@ -274,6 +275,45 @@ public sealed class Board : MonoBehaviour
         Tile centerSlime = GetCenterTile(slimeTiles);
         centerSlime.ShowEyes();
     }
+
+    private async Task KillTiles(List<Tile> tiles, AudioClip sfx)
+    {
+        List<Tile> growthTiles = new List<Tile>();
+        List<Tile> deathTiles = new List<Tile>();
+        Sequence deflateSequence = DOTween.Sequence();
+        foreach(Tile tile in tiles)
+        {
+            if (tile.Is(Item.Types.GREEN) && tile.IsNeighbouringSlime()) growthTiles.Add(tile);
+            if (tile.Is(Item.Types.ORANGE) && tile.IsNeighbouringSlime()) deathTiles.Add(tile);
+            Animate.Kill(tile, deflateSequence);
+        }
+        
+        audioSource.PlayOneShot(sfx);
+        await deflateSequence.Play().AsyncWaitForCompletion();
+
+        if (growthTiles.Count > 0) await HandleGrowthTiles(growthTiles);
+
+        foreach(Tile tile in tiles)
+        {
+            if (growthTiles.Contains(tile)) continue;
+            tile.Type = Item.Types.NONE;
+        }
+    }
+
+    private async Task HandleGrowthTiles(List<Tile> tiles)
+    {
+        Sequence growthSequence = DOTween.Sequence();
+
+        foreach(Tile tile in tiles)
+        {
+            tile.Type = Item.Types.SLIME;
+            tile.OnUpdatingGrid();
+            Animate.Spawn(tile, growthSequence);
+        }
+
+        audioSource.PlayOneShot(slimeSpawnSound);
+        await growthSequence.Play().AsyncWaitForCompletion();
+    }
     
     private void SpawnPlayer()
     {
@@ -369,22 +409,4 @@ public sealed class Board : MonoBehaviour
         // swap data
         SwapData(tile1, tile2);
     }
-
-    private async Task KillTiles(List<Tile> tiles, AudioClip sfx)
-    {
-        Sequence deflateSequence = DOTween.Sequence();
-        foreach(Tile tile in tiles)
-        {
-            Animate.Kill(tile, deflateSequence);
-        }
-        
-        audioSource.PlayOneShot(sfx);
-        await deflateSequence.Play().AsyncWaitForCompletion();
-
-        foreach(Tile tile in tiles)
-        {
-            tile.Type = Item.Types.NONE;
-        }
-    }
-
 }

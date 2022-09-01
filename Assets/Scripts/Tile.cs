@@ -185,6 +185,25 @@ public sealed class Tile : MonoBehaviour
         return Type == Item.Types.SLIME;
     }
 
+    public bool Is(Item.Types type)
+    {
+        return Type == type;
+    }
+
+    public bool IsNeighbouringSlime()
+    {
+        bool isNeighbour = false;
+        foreach(Tile neighbour in Neighbours)
+        {
+            if (neighbour != null && neighbour.IsSlime())
+            {
+                isNeighbour = true;
+                break;
+            }
+        }
+        return isNeighbour;
+    }
+
     public Vector2 GetVector2()
     {
         return new Vector2((float)x, (float)y);

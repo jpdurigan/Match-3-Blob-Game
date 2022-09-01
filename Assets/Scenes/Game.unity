@@ -379,7 +379,8 @@ MonoBehaviour:
   - {x: 3, y: 2}
   - {x: 3, y: 4}
   collectSound: {fileID: 8300000, guid: 4a44e878dfc90453da85403ccd9c70cc, type: 3}
-  slimeKillSound: {fileID: 8300000, guid: 6b28fcc3c34574317aa9a272b82284db, type: 3}
+  slimeSpawnSound: {fileID: 8300000, guid: f5f5db64e6bf2420bb47220fbad976ac, type: 3}
+  slimeKillSound: {fileID: 8300000, guid: c62ee31487979489e82fcee5a6b710f0, type: 3}
   audioSource: {fileID: 95861886}
 --- !u!82 &95861886
 AudioSource:
