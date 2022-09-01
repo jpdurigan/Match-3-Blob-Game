@@ -373,11 +373,13 @@ MonoBehaviour:
   - {fileID: 496776871}
   - {fileID: 1099920371}
   playerSpawn:
-  - {x: 3, y: 3}
   - {x: 2, y: 3}
-  - {x: 4, y: 3}
+  - {x: 2, y: 4}
   - {x: 3, y: 2}
+  - {x: 3, y: 3}
   - {x: 3, y: 4}
+  - {x: 3, y: 5}
+  - {x: 4, y: 3}
   collectSound: {fileID: 8300000, guid: 4a44e878dfc90453da85403ccd9c70cc, type: 3}
   slimeSpawnSound: {fileID: 8300000, guid: f5f5db64e6bf2420bb47220fbad976ac, type: 3}
   slimeKillSound: {fileID: 8300000, guid: c62ee31487979489e82fcee5a6b710f0, type: 3}
@@ -2396,31 +2398,31 @@ MonoBehaviour:
     TopRight: -1
     Left: 1
     Right: 1
-    BottomLeft: 1
+    BottomLeft: 0
     Bottom: 1
-    BottomRight: 1
+    BottomRight: 0
   - sprite: {fileID: -1719401162, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
-    TopLeft: -1
+    TopLeft: 0
     Top: 1
-    TopRight: 1
+    TopRight: -1
     Left: 1
     Right: 1
-    BottomLeft: -1
+    BottomLeft: 0
     Bottom: 1
-    BottomRight: 1
+    BottomRight: -1
   - sprite: {fileID: 1904107570, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
     TopLeft: -1
     Top: 1
-    TopRight: 1
+    TopRight: 0
     Left: 1
     Right: 1
     BottomLeft: -1
     Bottom: 1
-    BottomRight: 1
+    BottomRight: 0
   - sprite: {fileID: -1078299680, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
-    TopLeft: 1
+    TopLeft: 0
     Top: 1
-    TopRight: 1
+    TopRight: 0
     Left: 1
     Right: 1
     BottomLeft: -1
@@ -2540,31 +2542,31 @@ MonoBehaviour:
     TopRight: 0
     Left: 1
     Right: 1
-    BottomLeft: 1
+    BottomLeft: 0
     Bottom: 1
-    BottomRight: 1
+    BottomRight: 0
   - sprite: {fileID: 988627030, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
-    TopLeft: 1
+    TopLeft: 0
     Top: 1
     TopRight: 0
-    Left: 1
-    Right: -1
-    BottomLeft: 1
+    Left: -1
+    Right: 1
+    BottomLeft: 0
     Bottom: 1
     BottomRight: 0
   - sprite: {fileID: -446785231, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
-    TopLeft: 1
+    TopLeft: 0
     Top: 1
     TopRight: 0
     Left: 1
     Right: -1
-    BottomLeft: 1
+    BottomLeft: 0
     Bottom: 1
     BottomRight: 0
   - sprite: {fileID: -614759386, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
-    TopLeft: 1
+    TopLeft: 0
     Top: 1
-    TopRight: 1
+    TopRight: 0
     Left: 1
     Right: 1
     BottomLeft: 0
@@ -2623,6 +2625,15 @@ MonoBehaviour:
     Right: -1
     BottomLeft: 0
     Bottom: -1
+    BottomRight: 0
+  - sprite: {fileID: -687829603, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
+    TopLeft: 0
+    Top: 0
+    TopRight: 0
+    Left: 0
+    Right: 0
+    BottomLeft: 0
+    Bottom: 0
     BottomRight: 0
   defaultSprite: {fileID: -1298363219, guid: 82da86de77e52443fa28213c1d16c9b2, type: 3}
 --- !u!4 &1663907098
