@@ -292,10 +292,11 @@ public sealed class Board : MonoBehaviour
         await deflateSequence.Play().AsyncWaitForCompletion();
 
         if (growthTiles.Count > 0) await HandleGrowthTiles(growthTiles);
+        if (deathTiles.Count > 0) await HandleDeathTiles(deathTiles);
 
         foreach(Tile tile in tiles)
         {
-            if (growthTiles.Contains(tile)) continue;
+            if (growthTiles.Contains(tile) || deathTiles.Contains(tile)) continue;
             tile.Type = Item.Types.NONE;
         }
     }
@@ -313,6 +314,21 @@ public sealed class Board : MonoBehaviour
 
         audioSource.PlayOneShot(slimeSpawnSound);
         await growthSequence.Play().AsyncWaitForCompletion();
+    }
+
+    private async Task HandleDeathTiles(List<Tile> tiles)
+    {
+        List<Tile> slimes = new List<Tile>();
+        foreach(Tile tile in tiles)
+        {
+            foreach(Tile neighbour in tile.Neighbours)
+            {
+                if (neighbour == null || !neighbour.IsSlime()) continue;
+                if (!slimes.Contains(neighbour)) slimes.Add(neighbour);
+            }
+        }
+
+        if (slimes.Count > 0) await KillTiles(slimes, slimeKillSound);
     }
     
     private void SpawnPlayer()
