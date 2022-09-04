@@ -10,11 +10,10 @@ public class Item : ScriptableObject
         NONE,
         SLIME,
         BLUE,
-        PURPLE,
         YELLOW,
-        GREEN,
-        ORANGE,
-        WHITE,
+        PURPLE,
+        GROWTH,
+        DEATH,
     }
 
     public Types type;

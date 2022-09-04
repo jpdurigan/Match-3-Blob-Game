@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9f68cb13366864e2da861f50a874bde3, type: 3}
-  m_Name: Green
+  m_Name: Growth
   m_EditorClassIdentifier: 
   type: 5
   value: 50
-  sprite: {fileID: 21300000, guid: 145e7b0a5fbbc49c0886e28558de1097, type: 3}
+  sprite: {fileID: 21300000, guid: 34811c619496e4c819c456552c9ea4ff, type: 3}
   weight: 0.5

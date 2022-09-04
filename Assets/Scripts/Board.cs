@@ -68,17 +68,20 @@ public sealed class Board : MonoBehaviour
             tile.Initialize();
         }
 
-        SpawnPlayer();
-        #pragma warning disable CS4014
-        HandleBlankTiles();
-        HandleGridVisual();
-        #pragma warning restore CS4014
+        ScoreCounter.Instance.Score = 0;
     }
 
     /////////////////////////////////////////////////////
     
 
     //// MECHANICS
+    public async void StartGame()
+    {
+        await SpawnPlayer();
+        await HandleBlankTiles();
+        await HandleGridVisual();
+        ScoreCounter.Instance.Score = 0;
+    }
 
     public async void Select(Tile tile)
     {
@@ -133,6 +136,7 @@ public sealed class Board : MonoBehaviour
     private async Task HandleGrid(Jobs job = Jobs.HANDLE_MATCHES)
     {
         bool hasChangedGrid = false;
+        print("// ENTERED HANDLE GRID");
 
         Sequence wiggleSequence = DOTween.Sequence();
         foreach(Tile tile in Tiles)
@@ -147,25 +151,37 @@ public sealed class Board : MonoBehaviour
             switch (job)
             {
                 case Jobs.HANDLE_MATCHES:
+                    print("// ENTERED JOB: HANDLE_MATCHES");
                     hasChangedGrid = await HandleMatches();
+                    print("// EXITED JOB: HANDLE_MATCHES");
                     job = hasChangedGrid ? Jobs.HANDLE_FLOATING : Jobs.HANDLE_SLIME;
                     break;
                 case Jobs.HANDLE_FLOATING:
+                    print("// ENTERED JOB: HANDLE_FLOATING");
                     hasChangedGrid = await HandleFloatingTiles();
+                    print("// EXITED JOB: HANDLE_FLOATING");
                     job = hasChangedGrid ? Jobs.HANDLE_MATCHES : Jobs.HANDLE_SLIME;
                     break;
                 case Jobs.HANDLE_SLIME:
+                    print("// ENTERED JOB: HANDLE_SLIME");
                     hasChangedGrid = await HandleSlimeTiles();
+                    print("// EXITED JOB: HANDLE_SLIME");
                     job = hasChangedGrid ? Jobs.HANDLE_FLOATING : Jobs.HANDLE_BLANK;
                     break;
                 case Jobs.HANDLE_BLANK:
+                    print("// ENTERED JOB: HANDLE_BLANK");
                     await HandleBlankTiles();
+                    print("// EXITED JOB: HANDLE_BLANK");
                     job = Jobs.DONE;
                     break;
             }
+            // await Task.Delay(1000);
         }
 
+        print("// ENTERED JOB: HANDLE_GRID_VISUAL");
         await HandleGridVisual();
+        print("// EXITED JOB: HANDLE_GRID_VISUAL");
+        print("// EXITING HANDLE GRID");
     }
 
     private async Task<bool> HandleMatches()
@@ -247,6 +263,7 @@ public sealed class Board : MonoBehaviour
         {
             if (!tile.IsNone()) continue;
             tile.Type = ItemDatabase.GetRandomItem().type;
+            // GARGALO
             while (tile.GetConnectedTiles().Count > 2)
             {
                 tile.Type = ItemDatabase.GetRandomItem().type;
@@ -283,9 +300,10 @@ public sealed class Board : MonoBehaviour
         Sequence deflateSequence = DOTween.Sequence();
         foreach(Tile tile in tiles)
         {
-            if (tile.Is(Item.Types.GREEN) && tile.IsNeighbouringSlime()) growthTiles.Add(tile);
-            if (tile.Is(Item.Types.ORANGE) && tile.IsNeighbouringSlime()) deathTiles.Add(tile);
+            if (tile.Is(Item.Types.GROWTH) && tile.IsNeighbouringSlime()) growthTiles.Add(tile);
+            if (tile.Is(Item.Types.DEATH) && tile.IsNeighbouringSlime()) deathTiles.Add(tile);
             Animate.Kill(tile, deflateSequence);
+            ScoreCounter.Instance.Score += ItemDatabase.GetItemValue(tile.Type);
         }
         
         audioSource.PlayOneShot(sfx);
@@ -296,7 +314,7 @@ public sealed class Board : MonoBehaviour
 
         foreach(Tile tile in tiles)
         {
-            if (growthTiles.Contains(tile) || deathTiles.Contains(tile)) continue;
+            if (growthTiles.Contains(tile)) continue;
             tile.Type = Item.Types.NONE;
         }
     }
@@ -331,12 +349,15 @@ public sealed class Board : MonoBehaviour
         if (slimes.Count > 0) await KillTiles(slimes, slimeKillSound);
     }
     
-    private void SpawnPlayer()
+    private async Task SpawnPlayer()
     {
+        List<Tile> playerTiles = new List<Tile>();
         foreach(Vector2Int position in playerSpawn)
         {
-            Tiles[position.x, position.y].Type = Item.Types.SLIME;
+            Tile tile = GetTile(position.x, position.y);
+            playerTiles.Add(tile);
         }
+        await HandleGrowthTiles(playerTiles);
     }
 
     private bool HasMatches()
