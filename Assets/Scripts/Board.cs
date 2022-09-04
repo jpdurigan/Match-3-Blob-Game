@@ -81,7 +81,7 @@ public sealed class Board : MonoBehaviour
         {
             tile.Type = Item.Types.NONE;
         }
-        
+
         await SpawnPlayer();
         await HandleBlankTiles();
         await HandleGridVisual();
@@ -292,6 +292,7 @@ public sealed class Board : MonoBehaviour
                 if (slimeTiles == null) slimeTiles = tile.GetConnectedTiles();
             }
         }
+        ScoreCounter.Instance.Lives = slimeTiles.Count;
         await wiggleSequence.Play().AsyncWaitForCompletion();
 
         Tile centerSlime = GetCenterTile(slimeTiles);
@@ -362,6 +363,7 @@ public sealed class Board : MonoBehaviour
             Tile tile = GetTile(position.x, position.y);
             playerTiles.Add(tile);
         }
+        ScoreCounter.Instance.Lives = playerTiles.Count;
         await HandleGrowthTiles(playerTiles);
     }
 

@@ -69,7 +69,9 @@ public sealed class Tile : MonoBehaviour
         button = GetComponent<Button>();
         _icon = GetComponentsInChildren<Image>()[1];
         button.onClick.AddListener(() => Board.Instance.Select(this));
+        button.enabled = false;
         eyes.enabled = false;
+        Type = Item.Types.NONE;
     }
 
     public void Initialize()
