@@ -77,6 +77,11 @@ public sealed class Board : MonoBehaviour
     //// MECHANICS
     public async void StartGame()
     {
+        foreach(Tile tile in Tiles)
+        {
+            tile.Type = Item.Types.NONE;
+        }
+        
         await SpawnPlayer();
         await HandleBlankTiles();
         await HandleGridVisual();
@@ -300,7 +305,7 @@ public sealed class Board : MonoBehaviour
         Sequence deflateSequence = DOTween.Sequence();
         foreach(Tile tile in tiles)
         {
-            if (tile.Is(Item.Types.GROWTH) && tile.IsNeighbouringSlime()) growthTiles.Add(tile);
+            if (tile.Is(Item.Types.GROWTH) && tile.IsNeighbouringSlime()) AddListToList(growthTiles, tile.GetConnectedTiles());
             if (tile.Is(Item.Types.DEATH) && tile.IsNeighbouringSlime()) deathTiles.Add(tile);
             Animate.Kill(tile, deflateSequence);
             ScoreCounter.Instance.Score += ItemDatabase.GetItemValue(tile.Type);
@@ -445,5 +450,14 @@ public sealed class Board : MonoBehaviour
         await Animate.AsyncSwap(tile1, tile2, animSpeed);
         // swap data
         SwapData(tile1, tile2);
+    }
+
+    private void AddListToList(List<Tile> listA, List<Tile> listB)
+    {
+        foreach(Tile tile in listB)
+        {
+            if (listA.Contains(tile)) continue;
+            listA.Add(tile);
+        }
     }
 }

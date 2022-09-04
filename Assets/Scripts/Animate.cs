@@ -12,16 +12,21 @@ public static class Animate
     private static Vector3 SCALE_DEAD = Vector3.zero;
     private static Vector3 SCALE_SELECTED = Vector3.one * 0.8f;
 
+    private static Color COLOR_ALIVE = Color.white;
+    private static Color COLOR_DEAD = new Color(1, 1, 1, 0);
+
     public static void Spawn(Tile tile, Sequence sequence, float speed = 1f)
     {
         float randomDelay = Random.Range(0f, TWEEN_DURATION) * SPAWN_RANDOMNESS / speed;
         sequence.Insert(0f, tile.icon.transform.DOScale(SCALE_DEAD, 0f))
+                .Insert(0f, tile.icon.DOColor(COLOR_ALIVE, TWEEN_DURATION / speed))
                 .Insert(randomDelay, tile.icon.transform.DOScale(SCALE_ALIVE, TWEEN_DURATION / speed));
     }
 
     public static void Kill(Tile tile, Sequence sequence, float speed = 1f)
     {
         sequence.Insert(0f, tile.icon.transform.DOScale(SCALE_DEAD, TWEEN_DURATION / speed))
+                .Insert(0f, tile.icon.DOColor(COLOR_DEAD, TWEEN_DURATION / speed))
                 .InsertCallback(TWEEN_DURATION / speed, () => tile.eyes.enabled = false);
     }
 
