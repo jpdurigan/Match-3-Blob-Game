@@ -77,6 +77,7 @@ public sealed class Board : MonoBehaviour
     //// MECHANICS
     public async void StartGame()
     {
+        MessagePanel.Instance.Hide();
         foreach(Tile tile in Tiles)
         {
             tile.Type = Item.Types.NONE;
@@ -85,6 +86,7 @@ public sealed class Board : MonoBehaviour
         await SpawnPlayer();
         await HandleBlankTiles();
         await HandleGridVisual();
+
         ScoreCounter.Instance.Score = 0;
     }
 
@@ -141,7 +143,7 @@ public sealed class Board : MonoBehaviour
     private async Task HandleGrid(Jobs job = Jobs.HANDLE_MATCHES)
     {
         bool hasChangedGrid = false;
-        print("// ENTERED HANDLE GRID");
+        // print("// ENTERED HANDLE GRID");
 
         Sequence wiggleSequence = DOTween.Sequence();
         foreach(Tile tile in Tiles)
@@ -156,37 +158,37 @@ public sealed class Board : MonoBehaviour
             switch (job)
             {
                 case Jobs.HANDLE_MATCHES:
-                    print("// ENTERED JOB: HANDLE_MATCHES");
+                    // print("// ENTERED JOB: HANDLE_MATCHES");
                     hasChangedGrid = await HandleMatches();
-                    print("// EXITED JOB: HANDLE_MATCHES");
+                    // print("// EXITED JOB: HANDLE_MATCHES");
                     job = hasChangedGrid ? Jobs.HANDLE_FLOATING : Jobs.HANDLE_SLIME;
                     break;
                 case Jobs.HANDLE_FLOATING:
-                    print("// ENTERED JOB: HANDLE_FLOATING");
+                    // print("// ENTERED JOB: HANDLE_FLOATING");
                     hasChangedGrid = await HandleFloatingTiles();
-                    print("// EXITED JOB: HANDLE_FLOATING");
+                    // print("// EXITED JOB: HANDLE_FLOATING");
                     job = hasChangedGrid ? Jobs.HANDLE_MATCHES : Jobs.HANDLE_SLIME;
                     break;
                 case Jobs.HANDLE_SLIME:
-                    print("// ENTERED JOB: HANDLE_SLIME");
+                    // print("// ENTERED JOB: HANDLE_SLIME");
                     hasChangedGrid = await HandleSlimeTiles();
-                    print("// EXITED JOB: HANDLE_SLIME");
+                    // print("// EXITED JOB: HANDLE_SLIME");
                     job = hasChangedGrid ? Jobs.HANDLE_FLOATING : Jobs.HANDLE_BLANK;
                     break;
                 case Jobs.HANDLE_BLANK:
-                    print("// ENTERED JOB: HANDLE_BLANK");
+                    // print("// ENTERED JOB: HANDLE_BLANK");
                     await HandleBlankTiles();
-                    print("// EXITED JOB: HANDLE_BLANK");
+                    // print("// EXITED JOB: HANDLE_BLANK");
                     job = Jobs.DONE;
                     break;
             }
             // await Task.Delay(1000);
         }
 
-        print("// ENTERED JOB: HANDLE_GRID_VISUAL");
+        // print("// ENTERED JOB: HANDLE_GRID_VISUAL");
         await HandleGridVisual();
-        print("// EXITED JOB: HANDLE_GRID_VISUAL");
-        print("// EXITING HANDLE GRID");
+        // print("// EXITED JOB: HANDLE_GRID_VISUAL");
+        // print("// EXITING HANDLE GRID");
     }
 
     private async Task<bool> HandleMatches()
@@ -292,11 +294,19 @@ public sealed class Board : MonoBehaviour
                 if (slimeTiles == null) slimeTiles = tile.GetConnectedTiles();
             }
         }
-        ScoreCounter.Instance.Lives = slimeTiles.Count;
-        await wiggleSequence.Play().AsyncWaitForCompletion();
 
-        Tile centerSlime = GetCenterTile(slimeTiles);
-        centerSlime.ShowEyes();
+        if (slimeTiles != null)
+        {
+            ScoreCounter.Instance.Lives = slimeTiles.Count;
+            await wiggleSequence.Play().AsyncWaitForCompletion();
+
+            Tile centerSlime = GetCenterTile(slimeTiles);
+            centerSlime.ShowEyes();
+        }
+        else
+        {
+            MessagePanel.Instance.ShowMessage("Game Over!");
+        }
     }
 
     private async Task KillTiles(List<Tile> tiles, AudioClip sfx)
