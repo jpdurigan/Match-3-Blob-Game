@@ -7,6 +7,7 @@ public sealed class Tile : MonoBehaviour
 {
     public int x;
     public int y;
+    public int Length => allConnections != null ? allConnections.Count : 0;
 
     private Item.Types _type = Item.Types.NONE;
     public Item.Types Type
@@ -59,7 +60,15 @@ public sealed class Tile : MonoBehaviour
     [HideInInspector] public Tile Bottom;
     [HideInInspector] public Tile BottomRight;
     [HideInInspector] public Tile[] Neighbours;
-    private List<Tile> ConnectedTiles = null;
+    [HideInInspector] public Tile[] AllNeighbours;
+    [HideInInspector] public Tile[] HorizontalNeighbours;
+    [HideInInspector] public Tile[] VerticalNeighbours;
+    [HideInInspector] public Tile[] SquareNeighbours;
+
+    private List<Tile> allConnections = null;
+    private List<Tile> horizontalConnection = null;
+    private List<Tile> verticalConnection = null;
+    private List<Tile> squareConnection = null;
 
     private bool wasInitialized = false;
 
@@ -86,16 +95,28 @@ public sealed class Tile : MonoBehaviour
         BottomRight =   Board.Instance.GetTile(x + 1, y + 1);
 
         Neighbours = new[]{ Left, Top, Right, Bottom };
+        AllNeighbours = new[]{ TopLeft, Top, TopRight, Left, Right, BottomLeft, Bottom, BottomRight };
+        HorizontalNeighbours = new[]{ Left, Right };
+        VerticalNeighbours = new[]{ Top, Bottom };
+        SquareNeighbours = new[]{ Right, BottomRight, Bottom };
 
         Type = Item.Types.NONE;
 
         wasInitialized = true;
     }
 
-    public List<Tile> GetConnectedTiles()
+    public List<Tile> GetTilesToDestroy()
     {
-        if (ConnectedTiles == null) UpdateConnectedTilesRecursive();
-        return ConnectedTiles;
+        List<Tile> connectedTile = new List<Tile>();
+        if (HasHorizontalConnection()) connectedTile.AddRange(horizontalConnection);
+        if (HasVerticalConnection()) connectedTile.AddRange(verticalConnection);
+        if (HasSquareConnection()) connectedTile.AddRange(squareConnection);
+        return connectedTile;
+    }
+
+    public List<Tile> GetAllConnections()
+    {
+        return allConnections;
     }
 
     public bool ShouldDestroy()
@@ -104,28 +125,34 @@ public sealed class Tile : MonoBehaviour
         bool shouldDestroy = false;
 
         // has 3 horizontal
-        shouldDestroy = (
-            ConnectedTiles.Contains(Left)
-            && ConnectedTiles.Contains(Right)
-        );
+        shouldDestroy = HasHorizontalConnection();
         if (shouldDestroy) return shouldDestroy;
 
         // has 3 vertical
-        shouldDestroy = (
-            ConnectedTiles.Contains(Top)
-            && ConnectedTiles.Contains(Bottom)
-        );
+        shouldDestroy = HasVerticalConnection();
         if (shouldDestroy) return shouldDestroy;
 
-        // has 4 square
-        shouldDestroy = (
-            ConnectedTiles.Contains(Bottom)
-            && ConnectedTiles.Contains(Right)
-            && ConnectedTiles.Contains(BottomRight)
-        );
+        // has square
+        shouldDestroy = HasSquareConnection();
         if (shouldDestroy) return shouldDestroy;
 
         return shouldDestroy;
+    }
+
+    public void ResetConnections()
+    {
+        allConnections = null;
+        horizontalConnection = null;
+        verticalConnection = null;
+        squareConnection = null;
+    }
+
+    public void UpdateConnections()
+    {
+        if( allConnections == null ) UpdateAllConnectionsRecursive();
+        if( horizontalConnection == null ) UpdateHorizontalConnectionRecursive();
+        if( verticalConnection == null ) UpdateVerticalConnectionRecursive();
+        if( squareConnection == null ) UpdateSquareConnection();
     }
 
     public void UpdateVisual()
@@ -153,28 +180,77 @@ public sealed class Tile : MonoBehaviour
 
     private void OnTypeChanged()
     {
-        UpdateConnectedTilesRecursive();
-        foreach(Tile neighbour in Neighbours)
-        {
-            if (neighbour == null || ConnectedTiles.Contains(neighbour)) continue;
-            neighbour.UpdateConnectedTilesRecursive();
-        }
+        ResetConnections();
+        foreach(Tile tile in AllNeighbours) if (tile != null) tile.ResetConnections();
+        UpdateConnections();
+        foreach(Tile tile in AllNeighbours) if (tile != null) tile.UpdateConnections();
     }
 
-    private void UpdateConnectedTilesRecursive(List<Tile> tiles = null)
+    private void UpdateAllConnectionsRecursive(List<Tile> tiles = null)
     {
         if (tiles == null) tiles = new List<Tile>();
 
-        ConnectedTiles = tiles;
+        allConnections = tiles;
         if (!tiles.Contains(this)) tiles.Add(this);
         foreach(Tile tile in Neighbours)
         {
-            if (tile == null) continue;
-            if (tiles.Contains(tile)) continue;
-            if (tile.Type != Type) continue;
-
+            if (tile == null || tiles.Contains(tile) || tile.Type != Type) continue;
             tiles.Add(tile);
-            tile.UpdateConnectedTilesRecursive(tiles);
+            tile.UpdateAllConnectionsRecursive(tiles);
+        }
+    }
+
+    private void UpdateHorizontalConnectionRecursive(List<Tile> tiles = null)
+    {
+        if (tiles == null) tiles = new List<Tile>();
+        horizontalConnection = tiles;
+        if (!tiles.Contains(this)) tiles.Add(this);
+        foreach(Tile tile in HorizontalNeighbours)
+        {
+            if (tile == null || tiles.Contains(tile) || tile.Type != Type) continue;
+            tiles.Add(tile);
+            tile.UpdateHorizontalConnectionRecursive(tiles);
+        }
+    }
+
+    private void UpdateVerticalConnectionRecursive(List<Tile> tiles = null)
+    {
+        if (tiles == null) tiles = new List<Tile>();
+        verticalConnection = tiles;
+        if (!tiles.Contains(this)) tiles.Add(this);
+        foreach(Tile tile in VerticalNeighbours)
+        {
+            if (tile == null || tiles.Contains(tile) || tile.Type != Type) continue;
+            tiles.Add(tile);
+            tile.UpdateVerticalConnectionRecursive(tiles);
+        }
+    }
+
+    private void UpdateSquareConnection(List<Tile> tiles = null)
+    {
+        if (tiles != null)
+        {
+            squareConnection = tiles;
+            return;
+        }
+
+        bool isSquare = true;
+        foreach(Tile tile in SquareNeighbours)
+        {
+            if (tile == null || tile.Type != Type)
+            {
+                isSquare = false;
+                break;
+            }
+        }
+        if (!isSquare) return;
+        
+        tiles = new List<Tile> { this };
+        tiles.AddRange(SquareNeighbours);
+        squareConnection = tiles;
+        foreach(Tile tile in SquareNeighbours)
+        {
+            UpdateSquareConnection(tiles);
         }
     }
 
@@ -207,8 +283,21 @@ public sealed class Tile : MonoBehaviour
         return isNeighbour;
     }
 
+    public bool HasHorizontalConnection() => horizontalConnection != null && horizontalConnection.Count >= 3;
+    public bool HasVerticalConnection() => verticalConnection != null && verticalConnection.Count >= 3;
+    public bool HasSquareConnection() => squareConnection != null;
+
     public Vector2 GetVector2()
     {
         return new Vector2((float)x, (float)y);
+    }
+
+    public static void AddListToList(List<Tile> listA, List<Tile> listB)
+    {
+        foreach(Tile tile in listB)
+        {
+            if (listA.Contains(tile)) continue;
+            listA.Add(tile);
+        }
     }
 }

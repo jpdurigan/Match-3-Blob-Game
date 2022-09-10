@@ -74,7 +74,7 @@ public sealed class Slime : MonoBehaviour
     private SlimeSprite GetSlimeSpriteFromTile(Tile tile)
     {
         SlimeSprite tileSprite = new SlimeSprite();
-        List<Tile> tileConnections = tile.GetConnectedTiles();
+        List<Tile> tileConnections = tile.GetAllConnections();
         tileSprite.TopLeft = tileConnections.Contains(tile.TopLeft) ? 1 : -1;
         tileSprite.Top = tileConnections.Contains(tile.Top) ? 1 : -1;
         tileSprite.TopRight = tileConnections.Contains(tile.TopRight) ? 1 : -1;

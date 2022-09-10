@@ -196,9 +196,9 @@ public sealed class Board : MonoBehaviour
         bool hasChangedGrid = false;
         foreach(Tile tile in Tiles)
         {
-            List<Tile> connectedTiles = tile.GetConnectedTiles();
             if (tile.IsNone() || !tile.ShouldDestroy()) continue;
 
+            List<Tile> connectedTiles = tile.GetTilesToDestroy();
             await KillTiles(connectedTiles, collectSound);
             hasChangedGrid = true;
         }
@@ -240,7 +240,7 @@ public sealed class Board : MonoBehaviour
         {
             if (!tile.IsSlime()) continue;
 
-            List<Tile> connectedTiles = tile.GetConnectedTiles();
+            List<Tile> connectedTiles = tile.GetAllConnections();
             if (allSlimes.Contains(connectedTiles)) continue;
             
             allSlimes.Add(connectedTiles);
@@ -271,7 +271,7 @@ public sealed class Board : MonoBehaviour
             if (!tile.IsNone()) continue;
             tile.Type = ItemDatabase.GetRandomItem().type;
             // GARGALO
-            while (tile.GetConnectedTiles().Count > 2)
+            while (tile.ShouldDestroy())
             {
                 tile.Type = ItemDatabase.GetRandomItem().type;
             }
@@ -291,7 +291,7 @@ public sealed class Board : MonoBehaviour
             if (tile.IsSlime())
             {
                 Animate.Wiggle(tile, wiggleSequence);
-                if (slimeTiles == null) slimeTiles = tile.GetConnectedTiles();
+                if (slimeTiles == null) slimeTiles = tile.GetAllConnections();
             }
         }
 
@@ -316,7 +316,7 @@ public sealed class Board : MonoBehaviour
         Sequence deflateSequence = DOTween.Sequence();
         foreach(Tile tile in tiles)
         {
-            if (tile.Is(Item.Types.GROWTH) && tile.IsNeighbouringSlime()) AddListToList(growthTiles, tile.GetConnectedTiles());
+            if (tile.Is(Item.Types.GROWTH) && tile.IsNeighbouringSlime()) Tile.AddListToList(growthTiles, tile.GetTilesToDestroy());
             if (tile.Is(Item.Types.DEATH) && tile.IsNeighbouringSlime()) deathTiles.Add(tile);
             Animate.Kill(tile, deflateSequence);
             ScoreCounter.Instance.Score += ItemDatabase.GetItemValue(tile.Type);
@@ -462,14 +462,5 @@ public sealed class Board : MonoBehaviour
         await Animate.AsyncSwap(tile1, tile2, animSpeed);
         // swap data
         SwapData(tile1, tile2);
-    }
-
-    private void AddListToList(List<Tile> listA, List<Tile> listB)
-    {
-        foreach(Tile tile in listB)
-        {
-            if (listA.Contains(tile)) continue;
-            listA.Add(tile);
-        }
     }
 }
