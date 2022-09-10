@@ -60,10 +60,9 @@ public sealed class Tile : MonoBehaviour
     [HideInInspector] public Tile Bottom;
     [HideInInspector] public Tile BottomRight;
     [HideInInspector] public Tile[] Neighbours;
-    [HideInInspector] public Tile[] AllNeighbours;
     [HideInInspector] public Tile[] HorizontalNeighbours;
     [HideInInspector] public Tile[] VerticalNeighbours;
-    [HideInInspector] public Tile[] SquareNeighbours;
+    [HideInInspector] public Tile[][] SquareMasks;
 
     private List<Tile> allConnections = null;
     private List<Tile> horizontalConnection = null;
@@ -95,10 +94,14 @@ public sealed class Tile : MonoBehaviour
         BottomRight =   Board.Instance.GetTile(x + 1, y + 1);
 
         Neighbours = new[]{ Left, Top, Right, Bottom };
-        AllNeighbours = new[]{ TopLeft, Top, TopRight, Left, Right, BottomLeft, Bottom, BottomRight };
         HorizontalNeighbours = new[]{ Left, Right };
         VerticalNeighbours = new[]{ Top, Bottom };
-        SquareNeighbours = new[]{ Right, BottomRight, Bottom };
+        SquareMasks = new Tile[][]{
+            new[]{ TopLeft, Top, Left },
+            new[]{ TopRight, Top, Right },
+            new[]{ BottomLeft, Bottom, Left },
+            new[]{ BottomRight, Bottom, Right },
+        };
 
         Type = Item.Types.NONE;
 
@@ -181,9 +184,9 @@ public sealed class Tile : MonoBehaviour
     private void OnTypeChanged()
     {
         ResetConnections();
-        foreach(Tile tile in AllNeighbours) if (tile != null) tile.ResetConnections();
+        foreach(Tile tile in Neighbours) if (tile != null) tile.ResetConnections();
         UpdateConnections();
-        foreach(Tile tile in AllNeighbours) if (tile != null) tile.UpdateConnections();
+        foreach(Tile tile in Neighbours) if (tile != null) tile.UpdateConnections();
     }
 
     private void UpdateAllConnectionsRecursive(List<Tile> tiles = null)
@@ -234,23 +237,28 @@ public sealed class Tile : MonoBehaviour
             return;
         }
 
-        bool isSquare = true;
-        foreach(Tile tile in SquareNeighbours)
+        bool isSquare = false;
+        foreach(Tile[] squareMask in SquareMasks)
         {
-            if (tile == null || tile.Type != Type)
+            isSquare = true;
+            foreach(Tile tile in squareMask)
             {
+                if (tile != null && tile.Is(Type)) continue;
                 isSquare = false;
                 break;
             }
-        }
-        if (!isSquare) return;
-        
-        tiles = new List<Tile> { this };
-        tiles.AddRange(SquareNeighbours);
-        squareConnection = tiles;
-        foreach(Tile tile in SquareNeighbours)
-        {
-            UpdateSquareConnection(tiles);
+
+            if (isSquare)
+            {        
+                tiles = new List<Tile>();
+                tiles.Add(this);
+                tiles.AddRange(squareMask);
+                squareConnection = tiles;
+                foreach(Tile tile in squareMask)
+                {
+                    UpdateSquareConnection(tiles);
+                }
+            }
         }
     }
 
