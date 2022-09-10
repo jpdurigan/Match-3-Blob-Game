@@ -14,6 +14,9 @@ public class Item : ScriptableObject
         PURPLE,
         GROWTH,
         DEATH,
+        BOMB_HORIZONTAL,
+        BOMB_VERTICAL,
+        BOMB_SQUARE,
     }
 
     public Types type;

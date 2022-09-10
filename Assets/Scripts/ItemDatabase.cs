@@ -28,6 +28,8 @@ public static class ItemDatabase
         float randomWeight = Random.Range(0f, itemsTotalWeight);
         foreach(Item item in Items)
         {
+            if (item.weight <= Mathf.Epsilon) continue;
+            
             randomWeight -= item.weight;
             if (randomWeight <= 0)
             {
