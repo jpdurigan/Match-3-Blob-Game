@@ -81,6 +81,13 @@ public static class Animate
         await sequence.Play().AsyncWaitForCompletion();
     }
 
+    public static async Task AsyncSpawn(Tile tile, float speed = 1f)
+    {
+        Sequence sequence = DOTween.Sequence();
+        Spawn(tile, sequence, speed);
+        await sequence.Play().AsyncWaitForCompletion();
+    }
+
     public static async Task AsyncWiggle(Tile tile, float speed = 1f)
     {
         Sequence sequence = DOTween.Sequence();

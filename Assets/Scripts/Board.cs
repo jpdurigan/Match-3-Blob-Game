@@ -316,7 +316,7 @@ public sealed class Board : MonoBehaviour
         Sequence deflateSequence = DOTween.Sequence();
         foreach(Tile tile in tiles)
         {
-            if (tile.Is(Item.Types.GROWTH) && tile.IsNeighbouringSlime()) Tile.AddListToList(growthTiles, tile.GetTilesToDestroy());
+            if (tile.Is(Item.Types.GROWTH) && tile.IsNeighbouringSlime()) growthTiles.Add(tile);
             if (tile.Is(Item.Types.DEATH) && tile.IsNeighbouringSlime()) deathTiles.Add(tile);
             Animate.Kill(tile, deflateSequence);
             ScoreCounter.Instance.Score += ItemDatabase.GetItemValue(tile.Type);
@@ -325,14 +325,28 @@ public sealed class Board : MonoBehaviour
         audioSource.PlayOneShot(sfx);
         await deflateSequence.Play().AsyncWaitForCompletion();
 
+        // handle bombs
+        // Item.Types bombType = tiles.First().GetSpecialBomb();
+        // Tile bombTile = null;
+        // if (bombType != Item.Types.NONE) bombTile = await HandleGrowBomb(tiles, bombType);
+
         if (growthTiles.Count > 0) await HandleGrowthTiles(growthTiles);
         if (deathTiles.Count > 0) await HandleDeathTiles(deathTiles);
 
         foreach(Tile tile in tiles)
         {
-            if (growthTiles.Contains(tile)) continue;
+            // if (growthTiles.Contains(tile) || tile == bombTile) continue;
             tile.Type = Item.Types.NONE;
         }
+    }
+
+    private async Task<Tile> HandleGrowBomb(List<Tile> tiles, Item.Types bomb)
+    {
+        Tile centerTile = GetCenterTile(tiles);
+        centerTile.Type = bomb;
+        centerTile.OnUpdatingGrid();
+        await Animate.AsyncSpawn(centerTile);
+        return centerTile;
     }
 
     private async Task HandleGrowthTiles(List<Tile> tiles)
@@ -341,6 +355,8 @@ public sealed class Board : MonoBehaviour
 
         foreach(Tile tile in tiles)
         {
+            if (tile.IsBomb()) continue;
+            
             tile.Type = Item.Types.SLIME;
             tile.OnUpdatingGrid();
             Animate.Spawn(tile, growthSequence);

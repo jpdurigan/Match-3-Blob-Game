@@ -108,13 +108,23 @@ public sealed class Tile : MonoBehaviour
         wasInitialized = true;
     }
 
-    public List<Tile> GetTilesToDestroy()
+    public List<Tile> GetTilesToDestroy(List<Tile> tilesToDestroy = null, List<Tile> checkedTiles = null)
     {
-        List<Tile> connectedTile = new List<Tile>();
-        if (HasHorizontalConnection()) connectedTile.AddRange(horizontalConnection);
-        if (HasVerticalConnection()) connectedTile.AddRange(verticalConnection);
-        if (HasSquareConnection()) connectedTile.AddRange(squareConnection);
-        return connectedTile;
+        if (tilesToDestroy == null) tilesToDestroy = new List<Tile>();
+        if (checkedTiles == null) checkedTiles = new List<Tile>();
+
+        if (checkedTiles.Contains(this)) return tilesToDestroy;
+        checkedTiles.Add(this);
+
+        List<Tile> localTiles = new List<Tile>();
+        if (HasHorizontalConnection()) AddListToList(localTiles, horizontalConnection);
+        if (HasVerticalConnection()) AddListToList(localTiles, verticalConnection);
+        if (HasSquareConnection()) AddListToList(localTiles, squareConnection);
+
+        AddListToList(tilesToDestroy, localTiles);
+        foreach(Tile tile in localTiles) tile.GetTilesToDestroy(tilesToDestroy, checkedTiles);
+
+        return tilesToDestroy;
     }
 
     public List<Tile> GetAllConnections()
@@ -264,12 +274,17 @@ public sealed class Tile : MonoBehaviour
 
     public bool IsNone()
     {
-        return Type == Item.Types.NONE;
+        return Is(Item.Types.NONE);
     }
-
+    
     public bool IsSlime()
     {
-        return Type == Item.Types.SLIME;
+        return Is(Item.Types.SLIME);
+    }
+    
+    public bool IsBomb()
+    {
+        return Is(Item.Types.BOMB_HORIZONTAL) || Is(Item.Types.BOMB_VERTICAL) || Is(Item.Types.BOMB_SQUARE);
     }
 
     public bool Is(Item.Types type)
@@ -294,6 +309,27 @@ public sealed class Tile : MonoBehaviour
     public bool HasHorizontalConnection() => horizontalConnection != null && horizontalConnection.Count >= 3;
     public bool HasVerticalConnection() => verticalConnection != null && verticalConnection.Count >= 3;
     public bool HasSquareConnection() => squareConnection != null;
+
+    public Item.Types GetSpecialBomb()
+    {
+        bool hasSquareBomb = (
+            HasSquareConnection()
+            || ( HasHorizontalConnection() && HasVerticalConnection() )
+        );
+        if (hasSquareBomb) return Item.Types.BOMB_SQUARE;
+
+        bool hasHorizontalBomb = (
+            HasVerticalConnection() && verticalConnection.Count >= 4
+        );
+        if (hasHorizontalBomb) return Item.Types.BOMB_HORIZONTAL;
+
+        bool hasVerticalBomb = (
+            HasHorizontalConnection() && horizontalConnection.Count >= 4
+        );
+        if (hasVerticalBomb) return Item.Types.BOMB_VERTICAL;
+
+        return Item.Types.NONE;
+    }
 
     public Vector2 GetVector2()
     {
