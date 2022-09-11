@@ -108,23 +108,11 @@ public sealed class Tile : MonoBehaviour
         wasInitialized = true;
     }
 
-    public List<Tile> GetTilesToDestroy(List<Tile> tilesToDestroy = null, List<Tile> checkedTiles = null)
+    public Structure GetStructure()
     {
-        if (tilesToDestroy == null) tilesToDestroy = new List<Tile>();
-        if (checkedTiles == null) checkedTiles = new List<Tile>();
-
-        if (checkedTiles.Contains(this)) return tilesToDestroy;
-        checkedTiles.Add(this);
-
-        List<Tile> localTiles = new List<Tile>();
-        if (HasHorizontalConnection()) AddListToList(localTiles, horizontalConnection);
-        if (HasVerticalConnection()) AddListToList(localTiles, verticalConnection);
-        if (HasSquareConnection()) AddListToList(localTiles, squareConnection);
-
-        AddListToList(tilesToDestroy, localTiles);
-        foreach(Tile tile in localTiles) tile.GetTilesToDestroy(tilesToDestroy, checkedTiles);
-
-        return tilesToDestroy;
+        Structure structure = new Structure();
+        structure.Add(this);
+        return structure;
     }
 
     public List<Tile> GetAllConnections()
@@ -309,27 +297,9 @@ public sealed class Tile : MonoBehaviour
     public bool HasHorizontalConnection() => horizontalConnection != null && horizontalConnection.Count >= 3;
     public bool HasVerticalConnection() => verticalConnection != null && verticalConnection.Count >= 3;
     public bool HasSquareConnection() => squareConnection != null;
-
-    public Item.Types GetSpecialBomb()
-    {
-        bool hasSquareBomb = (
-            HasSquareConnection()
-            || ( HasHorizontalConnection() && HasVerticalConnection() )
-        );
-        if (hasSquareBomb) return Item.Types.BOMB_SQUARE;
-
-        bool hasHorizontalBomb = (
-            HasVerticalConnection() && verticalConnection.Count >= 4
-        );
-        if (hasHorizontalBomb) return Item.Types.BOMB_HORIZONTAL;
-
-        bool hasVerticalBomb = (
-            HasHorizontalConnection() && horizontalConnection.Count >= 4
-        );
-        if (hasVerticalBomb) return Item.Types.BOMB_VERTICAL;
-
-        return Item.Types.NONE;
-    }
+    public List<Tile> GetHorizontalConnection() => horizontalConnection;
+    public List<Tile> GetVerticalConnection() => verticalConnection;
+    public List<Tile> GetSquareConnection() => squareConnection;
 
     public Vector2 GetVector2()
     {
@@ -338,6 +308,7 @@ public sealed class Tile : MonoBehaviour
 
     public static void AddListToList(List<Tile> listA, List<Tile> listB)
     {
+        if (listA == null || listB == null) return;
         foreach(Tile tile in listB)
         {
             if (listA.Contains(tile)) continue;
