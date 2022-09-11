@@ -73,6 +73,6 @@ public class Structure : Object
 
     private bool HasSquareBomb() => HasSquareConnection() || (HasHorizontalConnection() && HasVerticalConnection());
     private bool HasHorizontalBomb() => HasVerticalConnection() && verticalConnection.Count >= 4;
-    private bool HasVerticalBomb() => HasVerticalConnection() && verticalConnection.Count >= 4;
+    private bool HasVerticalBomb() => HasHorizontalConnection() && horizontalConnection.Count >= 4;
     public bool HasBomb() => HasSquareBomb() || HasHorizontalBomb() || HasVerticalBomb();
 }
