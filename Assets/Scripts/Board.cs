@@ -266,7 +266,6 @@ public sealed class Board : MonoBehaviour
         return hasChangedGrid;
     }
 
-
     private async Task HandleBlankTiles()
     {
         Sequence inflateSequence = DOTween.Sequence();
@@ -315,13 +314,9 @@ public sealed class Board : MonoBehaviour
 
     private async Task KillTiles(Structure structure, AudioClip sfx)
     {
-        List<Tile> growthTiles = new List<Tile>();
-        List<Tile> deathTiles = new List<Tile>();
         Sequence deflateSequence = DOTween.Sequence();
         foreach(Tile tile in structure.Tiles)
         {
-            if (tile.Is(Item.Types.GROWTH) && tile.IsNeighbouringSlime()) growthTiles.Add(tile);
-            if (tile.Is(Item.Types.DEATH) && tile.IsNeighbouringSlime()) deathTiles.Add(tile);
             Animate.Kill(tile, deflateSequence);
             ScoreCounter.Instance.Score += ItemDatabase.GetItemValue(tile.Type);
         }
@@ -329,36 +324,37 @@ public sealed class Board : MonoBehaviour
         audioSource.PlayOneShot(sfx);
         await deflateSequence.Play().AsyncWaitForCompletion();
 
-        // handle bombs
+        List<Tile> excludeTiles = new List<Tile>();
+        
+        // handle creating bombs
         Item.Types bombType = structure.GetBomb();
-        Tile bombTile = null;
-        if (bombType != Item.Types.NONE) bombTile = await HandleGrowBomb(structure.Tiles, bombType);
+        if (bombType != Item.Types.NONE)
+        {
+            Tile bombTile = await HandleGrowBomb(structure.Tiles, bombType);
+            excludeTiles.Add(bombTile);
+        }
 
-        if (growthTiles.Count > 0) await HandleGrowthTiles(growthTiles);
-        if (deathTiles.Count > 0) await HandleDeathTiles(deathTiles);
+        if (structure.type == Item.Types.GROWTH)
+        {
+            List<Tile> tilesGrown = await HandleGrowthTiles(structure);
+            excludeTiles.AddRange(tilesGrown);
+        }
+        if (structure.type == Item.Types.DEATH) await HandleDeathTiles(structure);
 
         foreach(Tile tile in structure.Tiles)
         {
-            if (growthTiles.Contains(tile) || tile == bombTile) continue;
+            if (excludeTiles.Contains(tile)) continue;
             tile.Type = Item.Types.NONE;
         }
     }
 
-    private async Task<Tile> HandleGrowBomb(List<Tile> tiles, Item.Types bomb)
-    {
-        Tile centerTile = GetCenterTile(tiles);
-        centerTile.Type = bomb;
-        centerTile.OnUpdatingGrid();
-        await Animate.AsyncSpawn(centerTile);
-        return centerTile;
-    }
-
-    private async Task HandleGrowthTiles(List<Tile> tiles)
+    private async Task GrowSlimeTiles(List<Tile> tilesToGrow)
     {
         Sequence growthSequence = DOTween.Sequence();
 
-        foreach(Tile tile in tiles)
+        foreach(Tile tile in tilesToGrow)
         {
+            // if tile is occupied with bomb, skip it
             if (tile.IsBomb()) continue;
             
             tile.Type = Item.Types.SLIME;
@@ -370,19 +366,32 @@ public sealed class Board : MonoBehaviour
         await growthSequence.Play().AsyncWaitForCompletion();
     }
 
-    private async Task HandleDeathTiles(List<Tile> tiles)
+    private async Task<Tile> HandleGrowBomb(List<Tile> tiles, Item.Types bomb)
     {
-        Structure slimes = new Structure();
-        foreach(Tile tile in tiles)
-        {
-            foreach(Tile neighbour in tile.Neighbours)
-            {
-                if (neighbour == null || !neighbour.IsSlime()) continue;
-                slimes.Add(neighbour);
-            }
-        }
+        Tile centerTile = GetCenterTile(tiles);
+        centerTile.Type = bomb;
+        centerTile.OnUpdatingGrid();
+        await Animate.AsyncSpawn(centerTile);
+        return centerTile;
+    }
 
-        if (slimes.Tiles.Count > 0) await KillTiles(slimes, slimeKillSound);
+    private async Task<List<Tile>> HandleGrowthTiles(Structure structure)
+    {
+        List<Tile> tilesToGrow = SpecialItem.GetGrowthAffectedTiles(structure);
+        if (tilesToGrow.Count > 0) await GrowSlimeTiles(tilesToGrow);
+        return tilesToGrow;
+    }
+
+    private async Task<List<Tile>> HandleDeathTiles(Structure structure)
+    {
+        List<Tile> tilesToKill = SpecialItem.GetDeathAffectedTiles(structure);
+        if (tilesToKill.Count > 0)
+        {
+            Structure slimes = new Structure();
+            slimes.AddList(tilesToKill);
+            await KillTiles(slimes, slimeKillSound);
+        }
+        return tilesToKill;
     }
     
     private async Task SpawnPlayer()
@@ -394,7 +403,7 @@ public sealed class Board : MonoBehaviour
             playerTiles.Add(tile);
         }
         ScoreCounter.Instance.Lives = playerTiles.Count;
-        await HandleGrowthTiles(playerTiles);
+        await GrowSlimeTiles(playerTiles);
     }
 
     private bool HasMatches()

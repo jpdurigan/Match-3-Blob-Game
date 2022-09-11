@@ -5,7 +5,8 @@ using UnityEngine;
 
 public class Structure : Object
 {
-    public List<Tile> Tiles = null;
+    public List<Tile> Tiles { get; private set; } = null;
+
     public Item.Types type = Item.Types.INVALID;
 
     private List<Tile> horizontalConnection = null;

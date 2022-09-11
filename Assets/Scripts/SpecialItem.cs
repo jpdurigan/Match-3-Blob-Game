@@ -5,6 +5,29 @@ using UnityEngine;
 
 public static class SpecialItem
 {
+    public static List<Tile> GetGrowthAffectedTiles(Structure structure)
+    {
+        List<Tile> growthTiles = new List<Tile>();
+        foreach(Tile tile in structure.Tiles)
+        {
+            if (tile.IsNeighbouringSlime()) growthTiles.Add(tile);
+        }
+        return growthTiles;
+    }
+
+    public static List<Tile> GetDeathAffectedTiles(Structure structure)
+    {
+        List<Tile> deathTiles = new List<Tile>();
+        foreach(Tile tile in structure.Tiles)
+        {
+            foreach(Tile neighbour in tile.Neighbours)
+            {
+                if (neighbour != null && neighbour.IsSlime()) deathTiles.Add(neighbour);
+            }
+        }
+        return deathTiles;
+    }
+
     public static List<Tile> GetDamage(Tile tile)
     {
         List<Tile> tiles = new List<Tile>();
