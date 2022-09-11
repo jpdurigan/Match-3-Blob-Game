@@ -128,6 +128,7 @@ public sealed class Tile : MonoBehaviour
     public Structure GetStructure()
     {
         Structure structure = new Structure();
+        if (IsBomb()) structure.AddList(SpecialItem.GetDamage(this));
         structure.Add(this);
         return structure;
     }

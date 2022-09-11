@@ -6,15 +6,20 @@ using UnityEngine;
 public class Structure : Object
 {
     public List<Tile> Tiles = null;
+    public Item.Types type = Item.Types.INVALID;
+
     private List<Tile> horizontalConnection = null;
     private List<Tile> verticalConnection = null;
     private List<Tile> squareConnection = null;
 
     public void Add(Tile tile)
     {
-        if (Has(tile)) return;
+        if (tile == null || Has(tile)) return;
+
         if (Tiles == null) Tiles = new List<Tile>();
         Tiles.Add(tile);
+        if (type == Item.Types.INVALID) type = tile.Type;
+        else if (type != tile.Type) type = Item.Types.NONE;
 
         if (tile.IsSlime()) return;
 
