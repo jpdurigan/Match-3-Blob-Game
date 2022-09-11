@@ -30,6 +30,23 @@ public sealed class Tile : MonoBehaviour
             if (sprite != null) _icon.sprite = sprite;
             else _icon.sprite = emptySprite;
 
+            // resetar trigger das bombas
+            IsTriggered = false;
+        }
+    }
+
+    private bool _isTriggered = false;
+    public bool IsTriggered
+    {
+        get
+        {
+            if (!IsBomb()) return false;
+            return _isTriggered;
+        }
+
+        set
+        {
+            _isTriggered = value;
         }
     }
 
@@ -123,6 +140,8 @@ public sealed class Tile : MonoBehaviour
     public bool ShouldDestroy()
     {
         if (IsSlime()) return false;
+        if (IsBomb()) return IsTriggered;
+
         bool shouldDestroy = false;
 
         // has 3 horizontal

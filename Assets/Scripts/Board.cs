@@ -117,6 +117,7 @@ public sealed class Board : MonoBehaviour
         }
 
         _selection.Add(tile);
+        tile.IsTriggered = true;
         await Animate.AsyncSelect(tile);
 
         if (_selection.Count < 2)
@@ -459,6 +460,8 @@ public sealed class Board : MonoBehaviour
         Transform icon2Transform = icon2.transform;
         Image eyes1 = tile1.eyes;
         Image eyes2 = tile2.eyes;
+        bool isTriggered1 = tile1.IsTriggered;
+        bool isTriggered2 = tile2.IsTriggered;
 
         // swap parents
         icon1Transform.SetParent(tile2.transform);
@@ -473,6 +476,10 @@ public sealed class Board : MonoBehaviour
         // swap types
         tile1.Type = item2;
         tile2.Type = item1;
+
+        // swap is triggered
+        tile1.IsTriggered = isTriggered2;
+        tile2.IsTriggered = isTriggered1;
     }
 
     private async Task AsyncSwap(Tile tile1, Tile tile2, float animSpeed = 1f)
