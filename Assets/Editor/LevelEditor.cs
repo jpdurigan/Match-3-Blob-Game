@@ -7,12 +7,17 @@ public class LevelEditor : Editor
 {
     Level level;
 
+    bool shouldResize;
+    Vector2Int initialConditionGridSize;
+
     const float SIZE_SPACE = 16f;
-    const float SIZE_PREVIEW = 32f;
+    const float SIZE_PREVIEW = 64f;
 
     public void OnEnable()
     {
         level = (Level)target;
+        shouldResize = false;
+        initialConditionGridSize = level.gridSize;
     }
 
     public override void OnInspectorGUI()
@@ -29,23 +34,40 @@ public class LevelEditor : Editor
         {
             Vector2Int oldGridSize = level.gridSize;
             level.gridSize = newGridSize;
-            level.initialCondition = ResizeInitialCondition(level.initialCondition, oldGridSize, newGridSize);
+            if (!shouldResize)
+            {
+                shouldResize = true;
+                initialConditionGridSize = oldGridSize;
+            }
+            else if (newGridSize == initialConditionGridSize)
+            {
+                shouldResize = false;
+            }
+        }
+
+        if (shouldResize)
+        {
+            if (GUILayout.Button("Resize initial condition"))
+            {
+                level.initialCondition = ResizeInitialCondition(level.initialCondition, initialConditionGridSize, newGridSize);
+                initialConditionGridSize = newGridSize;
+            }
         }
 
         GUILayout.Space(SIZE_SPACE);
         // update initial condition
         GUILayout.Label("Initial Condition");
         bool hasInitialConditionChanged = false;
-        for (int y = 0; y < level.gridSize.y; y++)
+        for (int y = 0; y < initialConditionGridSize.y; y++)
         {
             GUILayout.BeginHorizontal();
-            for (int x = 0; x < level.gridSize.x; x++)
+            for (int x = 0; x < initialConditionGridSize.x; x++)
             {
-                Item.Types type = level.GetTile(x, y);
+                Item.Types type = level.GetTile(x, y, initialConditionGridSize);
                 Item.Types selectedType = (Item.Types)EditorGUILayout.Popup((int)type, Enum.GetNames(typeof(Item.Types)));
                 if (type != selectedType)
                 {
-                    int index = level.GetTileIndex(x, y);
+                    int index = level.GetTileIndex(x, y, initialConditionGridSize);
                     level.initialCondition[index] = selectedType;
                     hasInitialConditionChanged = true;
                     ItemDatabase.GetItemTexture(selectedType);
@@ -58,18 +80,20 @@ public class LevelEditor : Editor
         // update initial condition
         GUILayout.Label("Preview");
         // float buttonWidth = EditorGUIUtility.currentViewWidth / (float)level.gridSize.x;
-        for (int y = 0; y < level.gridSize.y; y++)
+        for (int y = 0; y < initialConditionGridSize.y; y++)
         {
             GUILayout.BeginHorizontal();
-            for (int x = 0; x < level.gridSize.x; x++)
+            for (int x = 0; x < initialConditionGridSize.x; x++)
             {
-                Item.Types type = level.GetTile(x, y);
+                Item.Types type = level.GetTile(x, y, initialConditionGridSize);
                 Texture texture = ItemDatabase.GetItemTexture(type);
                 // EditorGUILayout
                 GUILayout.Button(
                     texture,
-                    GUILayout.MinWidth(SIZE_PREVIEW), GUILayout.MaxWidth(SIZE_PREVIEW),
-                    GUILayout.MinHeight(SIZE_PREVIEW), GUILayout.MaxHeight(SIZE_PREVIEW)
+                    GUILayout.Width(SIZE_PREVIEW), GUILayout.Height(SIZE_PREVIEW)
+                    // GUILayout.ExpandWidth(false)
+                    // GUILayout.MinWidth(SIZE_PREVIEW), GUILayout.MaxWidth(SIZE_PREVIEW),
+                    // GUILayout.MinHeight(SIZE_PREVIEW), GUILayout.MaxHeight(SIZE_PREVIEW)
                 );
             }
             GUILayout.EndHorizontal();
