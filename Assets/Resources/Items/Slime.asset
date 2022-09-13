@@ -9,8 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b2588ae3884834b8eb3a5b5233ed7c2d, type: 3}
-  m_Name: Level-Teste
+  m_Script: {fileID: 11500000, guid: 9f68cb13366864e2da861f50a874bde3, type: 3}
+  m_Name: Slime
   m_EditorClassIdentifier: 
-  gridSize: {x: 3, y: 3}
-  initialCondition: 01000000040000000b0000000c000000010000000b0000000b0000000b0000000b000000
+  type: 1
+  value: 0
+  sprite: {fileID: 0}
+  texture: {fileID: 2800000, guid: 25aa92f40575446fdbf54db9f3d7ae6d, type: 3}
+  weight: 0

@@ -9,8 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b2588ae3884834b8eb3a5b5233ed7c2d, type: 3}
-  m_Name: Level-Teste
+  m_Script: {fileID: 11500000, guid: 9f68cb13366864e2da861f50a874bde3, type: 3}
+  m_Name: Block
   m_EditorClassIdentifier: 
-  gridSize: {x: 3, y: 3}
-  initialCondition: 01000000040000000b0000000c000000010000000b0000000b0000000b0000000b000000
+  type: 10
+  value: 0
+  sprite: {fileID: 21300000, guid: b62b545fde50742e1b13cd6060e6f910, type: 3}
+  texture: {fileID: 2800000, guid: b62b545fde50742e1b13cd6060e6f910, type: 3}
+  weight: 0
