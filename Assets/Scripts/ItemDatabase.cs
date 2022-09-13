@@ -2,7 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEditor;
 
+[InitializeOnLoad]
 public static class ItemDatabase
 {
     public static Item[] Items { get; private set; }
@@ -10,8 +12,7 @@ public static class ItemDatabase
     private static Dictionary<Item.Types, Item> database;
     private static float itemsTotalWeight = 0f;
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void Initialize()
+    static ItemDatabase()
     {
         Items = Resources.LoadAll<Item>(path:"Items/").OrderBy(i => i.weight).ToArray();
         database = new Dictionary<Item.Types, Item>();
@@ -50,6 +51,12 @@ public static class ItemDatabase
     {
         if (!database.ContainsKey(type)) return null;
         return database[type].sprite;
+    }
+
+    public static Texture GetItemTexture(Item.Types type)
+    {
+        if (!database.ContainsKey(type)) return null;
+        return database[type].texture;
     }
 
 }

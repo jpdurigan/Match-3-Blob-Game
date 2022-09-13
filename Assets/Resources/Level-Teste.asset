@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2588ae3884834b8eb3a5b5233ed7c2d, type: 3}
   m_Name: Level-Teste
   m_EditorClassIdentifier: 
-  gridSize: {x: 3, y: 2}
-  initialCondition: 0b0000000b0000000b0000000b0000000b0000000b000000
+  gridSize: {x: 3, y: 3}
+  initialCondition: 02000000040000000b0000000c000000010000000b0000000b0000000b0000000b000000

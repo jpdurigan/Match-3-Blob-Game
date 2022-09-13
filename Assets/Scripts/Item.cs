@@ -25,5 +25,6 @@ public class Item : ScriptableObject
     public Types type;
     public int value;
     public Sprite sprite;
+    public Texture texture;
     [Range(0f, 2f)] public float weight;
 }

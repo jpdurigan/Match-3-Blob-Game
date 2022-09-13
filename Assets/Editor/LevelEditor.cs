@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEditor;
 
@@ -5,6 +6,9 @@ using UnityEditor;
 public class LevelEditor : Editor
 {
     Level level;
+
+    const float SIZE_SPACE = 16f;
+    const float SIZE_PREVIEW = 32f;
 
     public void OnEnable()
     {
@@ -28,7 +32,50 @@ public class LevelEditor : Editor
             level.initialCondition = ResizeInitialCondition(level.initialCondition, oldGridSize, newGridSize);
         }
 
-        if (hasSizeChanged) EditorUtility.SetDirty(level);
+        GUILayout.Space(SIZE_SPACE);
+        // update initial condition
+        GUILayout.Label("Initial Condition");
+        bool hasInitialConditionChanged = false;
+        for (int y = 0; y < level.gridSize.y; y++)
+        {
+            GUILayout.BeginHorizontal();
+            for (int x = 0; x < level.gridSize.x; x++)
+            {
+                Item.Types type = level.GetTile(x, y);
+                Item.Types selectedType = (Item.Types)EditorGUILayout.Popup((int)type, Enum.GetNames(typeof(Item.Types)));
+                if (type != selectedType)
+                {
+                    int index = level.GetTileIndex(x, y);
+                    level.initialCondition[index] = selectedType;
+                    hasInitialConditionChanged = true;
+                    ItemDatabase.GetItemTexture(selectedType);
+                }
+            }
+            GUILayout.EndHorizontal();
+        }
+
+        GUILayout.Space(SIZE_SPACE);
+        // update initial condition
+        GUILayout.Label("Preview");
+        // float buttonWidth = EditorGUIUtility.currentViewWidth / (float)level.gridSize.x;
+        for (int y = 0; y < level.gridSize.y; y++)
+        {
+            GUILayout.BeginHorizontal();
+            for (int x = 0; x < level.gridSize.x; x++)
+            {
+                Item.Types type = level.GetTile(x, y);
+                Texture texture = ItemDatabase.GetItemTexture(type);
+                // EditorGUILayout
+                GUILayout.Button(
+                    texture,
+                    GUILayout.MinWidth(SIZE_PREVIEW), GUILayout.MaxWidth(SIZE_PREVIEW),
+                    GUILayout.MinHeight(SIZE_PREVIEW), GUILayout.MaxHeight(SIZE_PREVIEW)
+                );
+            }
+            GUILayout.EndHorizontal();
+        }
+
+        if (hasSizeChanged || hasInitialConditionChanged) EditorUtility.SetDirty(level);
     }
 
     private Item.Types[] ResizeInitialCondition(Item.Types[] condition, Vector2Int oldSize, Vector2Int newSize)
