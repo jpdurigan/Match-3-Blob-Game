@@ -17,6 +17,8 @@ public class Item : ScriptableObject
         BOMB_HORIZONTAL,
         BOMB_VERTICAL,
         BOMB_SQUARE,
+        BLOCK,
+        RANDOM,
         INVALID,
     }
 
