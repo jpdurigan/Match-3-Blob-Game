@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using TMPro;
 
 public static class Animate
 {
@@ -15,9 +16,14 @@ public static class Animate
 
     private static Color COLOR_ALIVE = Color.white;
     private static Color COLOR_DEAD = new Color(1, 1, 1, 0);
+    private static Color COLOR_TEXT_NORMAL = Color.white;
+    private static Color COLOR_TEXT_HIGHLIGHT = new Color(1f, 0.825f, 0f, 1f);
 
-    private static float FADE_IN = 1F;
-    private static float FADE_OUT = 0F;
+    private static float FADE_IN = 1f;
+    private static float FADE_OUT = 0f;
+
+    private static float SCALE_Y_NORMAL = 1f;
+    private static float SCALE_Y_SQUISHY = 0.76f;
 
     public static void Spawn(Tile tile, Sequence sequence, float speed = 1f)
     {
@@ -70,6 +76,18 @@ public static class Animate
         sequence.Insert(0f, graphic.DOFade(FADE_OUT, TWEEN_DURATION / speed));
     }
 
+    public static void UpdateText(TextMeshProUGUI text, string msg, Sequence sequence, float speed = 1f)
+    {
+        Color initialColor = text.color;
+        Color highlightColor = initialColor * COLOR_TEXT_HIGHLIGHT;
+        float tweenDuration = TWEEN_DURATION / (2 * speed);
+        sequence.Insert(0f, text.DOColor(highlightColor, tweenDuration))
+                .Insert(0f, text.transform.DOScaleY(SCALE_Y_SQUISHY, tweenDuration).SetEase(Ease.InCubic))
+                .InsertCallback(tweenDuration, () => text.SetText(msg))
+                .Insert(tweenDuration, text.DOColor(initialColor, tweenDuration))
+                .Insert(tweenDuration, text.transform.DOScaleY(SCALE_Y_NORMAL, tweenDuration).SetEase(Ease.OutBack));
+    }
+
 
 
     public static async Task AsyncSwap(Tile tile1, Tile tile2, float speed = 1f)
@@ -106,6 +124,13 @@ public static class Animate
     {
         Sequence sequence = DOTween.Sequence();
         Wiggle(tile, sequence, speed);
+        await sequence.Play().AsyncWaitForCompletion();
+    }
+
+    public static async Task AsyncUpdateText(TextMeshProUGUI text, string msg, float speed = 1f)
+    {
+        Sequence sequence = DOTween.Sequence();
+        UpdateText(text, msg, sequence, speed);
         await sequence.Play().AsyncWaitForCompletion();
     }
 }

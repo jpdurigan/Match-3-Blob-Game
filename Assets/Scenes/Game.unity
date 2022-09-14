@@ -329,6 +329,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a57760ba5936480aa694cd10a91f082, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  visible: 0
   messageBG: {fileID: 84525382}
   message: {fileID: 760882862}
 --- !u!1 &95861878

@@ -15,7 +15,8 @@ public class ScoreCounter : MonoBehaviour
         {
             if (_score == value) return;
             _score = value;
-            scoreText.SetText($"{_score:D8}");
+            // scoreText.SetText($"{_score:D8}");
+            Animate.AsyncUpdateText(scoreText, $"{_score:D8}");
         }
     }
 
@@ -27,7 +28,8 @@ public class ScoreCounter : MonoBehaviour
         {
             if (_lives == value) return;
             _lives = value;
-            livesText.SetText($"{_lives:D2}");
+            // livesText.SetText($"{_lives:D2}");
+            Animate.AsyncUpdateText(livesText, $"{_lives:D2}");
         }
     }
 
