@@ -29,8 +29,8 @@ public sealed class Board : MonoBehaviour
     public int Width => Tiles.GetLength(dimension: 0);
     public int Height => Tiles.GetLength(1);
 
-    private List<Tile> _selection = new List<Tile>();
-    private bool shouldBlockSelection = false;
+    private List<Tile> _selection;
+    private bool shouldBlockSelection;
 
     [Header("Audio")]
     [SerializeField] private AudioClip collectSound;
@@ -62,6 +62,8 @@ public sealed class Board : MonoBehaviour
         MessagePanel.Instance.Hide();
 
         CreateGrid(level);
+        _selection = new List<Tile>();
+        shouldBlockSelection = false;
 
         await HandleInitialCondition(level);
         await HandleBlankTiles();
