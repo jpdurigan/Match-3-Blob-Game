@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 
-// [Serializable]
 [CreateAssetMenu(menuName = "Match-3/Level")]
 public class Level : ScriptableObject
 {

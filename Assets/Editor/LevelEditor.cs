@@ -22,8 +22,6 @@ public class LevelEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        // base.OnInspectorGUI();
-
         // update grid size
         Vector2Int newGridSize = EditorGUILayout.Vector2IntField(
             "Grid Size", level.gridSize
@@ -45,6 +43,7 @@ public class LevelEditor : Editor
             }
         }
 
+        // activate button for resizing
         if (shouldResize)
         {
             if (GUILayout.Button("Resize initial condition"))
@@ -79,7 +78,6 @@ public class LevelEditor : Editor
         GUILayout.Space(SIZE_SPACE);
         // update initial condition
         GUILayout.Label("Preview");
-        // float buttonWidth = EditorGUIUtility.currentViewWidth / (float)level.gridSize.x;
         for (int y = 0; y < initialConditionGridSize.y; y++)
         {
             GUILayout.BeginHorizontal();
@@ -87,14 +85,7 @@ public class LevelEditor : Editor
             {
                 Item.Types type = level.GetTile(x, y, initialConditionGridSize);
                 Texture texture = ItemDatabase.GetItemTexture(type);
-                // EditorGUILayout
-                GUILayout.Button(
-                    texture,
-                    GUILayout.Width(SIZE_PREVIEW), GUILayout.Height(SIZE_PREVIEW)
-                    // GUILayout.ExpandWidth(false)
-                    // GUILayout.MinWidth(SIZE_PREVIEW), GUILayout.MaxWidth(SIZE_PREVIEW),
-                    // GUILayout.MinHeight(SIZE_PREVIEW), GUILayout.MaxHeight(SIZE_PREVIEW)
-                );
+                GUILayout.Button(texture, GUILayout.Width(SIZE_PREVIEW), GUILayout.Height(SIZE_PREVIEW));
             }
             GUILayout.EndHorizontal();
         }
@@ -114,7 +105,6 @@ public class LevelEditor : Editor
 
                 bool hasOldValue = oldIndex < condition.Length && x < oldSize.x && y < oldSize.y;
                 resized[newIndex] = hasOldValue ? condition[oldIndex] : Item.Types.RANDOM;
-                // Debug.Log(resized[newIndex]);
             }
         }
         return resized;
