@@ -21,17 +21,17 @@ public sealed class Board : MonoBehaviour
 
 
     [Header("Game")]
-    public Row[] rows;
+    [SerializeField] GameObject tilePrefab;
+    [SerializeField] GameObject rowPrefab;
+    private Row[] rows;
+    private Tile[,] Tiles;
 
-    public Tile[,] Tiles { get; private set; }
-    [SerializeField] Vector2Int[] playerSpawn;
-
-    public int Width => Tiles.GetLength(dimension:0);
+    public int Width => Tiles.GetLength(dimension: 0);
     public int Height => Tiles.GetLength(1);
 
     private List<Tile> _selection = new List<Tile>();
     private bool shouldBlockSelection = false;
-    
+
     [Header("Audio")]
     [SerializeField] private AudioClip collectSound;
     [SerializeField] private AudioClip slimeSpawnSound;
@@ -39,7 +39,7 @@ public sealed class Board : MonoBehaviour
     [SerializeField] private AudioSource audioSource;
 
     /////////////////////////////////////////////////////
-    
+
 
     //// ENGINE METHODS
 
@@ -50,40 +50,20 @@ public sealed class Board : MonoBehaviour
 
     private void Start()
     {
-        Tiles = new Tile[rows[0].tiles.Length, rows.Length];
-
-        for (var y = 0; y < Height; y++)
-        {
-            for (var x = 0; x < Width; x++)
-            {
-                Tile tile = rows[y].tiles[x];
-
-                tile.x = x;
-                tile.y = y;
-                Tiles[x, y] = tile;
-            }
-        }
-        foreach(Tile tile in Tiles)
-        {
-            tile.Initialize();
-        }
-
         ScoreCounter.Instance.Score = 0;
     }
 
     /////////////////////////////////////////////////////
-    
+
 
     //// MECHANICS
-    public async void StartGame()
+    public async void StartLevel(Level level)
     {
         MessagePanel.Instance.Hide();
-        foreach(Tile tile in Tiles)
-        {
-            tile.Type = Item.Types.NONE;
-        }
 
-        await SpawnPlayer();
+        CreateGrid(level);
+
+        await HandleInitialCondition(level);
         await HandleBlankTiles();
         await HandleGridVisual();
 
@@ -147,7 +127,7 @@ public sealed class Board : MonoBehaviour
         // print("// ENTERED HANDLE GRID");
 
         Sequence wiggleSequence = DOTween.Sequence();
-        foreach(Tile tile in Tiles)
+        foreach (Tile tile in Tiles)
         {
             tile.OnUpdatingGrid();
             if (tile.IsSlime()) Animate.Wiggle(tile, wiggleSequence);
@@ -195,7 +175,7 @@ public sealed class Board : MonoBehaviour
     private async Task<bool> HandleMatches()
     {
         bool hasChangedGrid = false;
-        foreach(Tile tile in Tiles)
+        foreach (Tile tile in Tiles)
         {
             if (tile.IsNone() || !tile.ShouldDestroy()) continue;
 
@@ -237,13 +217,13 @@ public sealed class Board : MonoBehaviour
         List<Tile> biggestSlime = null;
         List<List<Tile>> allSlimes = new List<List<Tile>>();
 
-        foreach(Tile tile in Tiles)
+        foreach (Tile tile in Tiles)
         {
             if (!tile.IsSlime()) continue;
 
             List<Tile> connectedTiles = tile.GetAllConnections();
             if (allSlimes.Contains(connectedTiles)) continue;
-            
+
             allSlimes.Add(connectedTiles);
             if (biggestSlime == null || connectedTiles.Count > biggestSlime.Count) biggestSlime = connectedTiles;
         }
@@ -252,9 +232,9 @@ public sealed class Board : MonoBehaviour
         {
             allSlimes.Remove(biggestSlime);
             Structure slimesToKill = new Structure();
-            foreach(List<Tile> slimeChain in allSlimes)
+            foreach (List<Tile> slimeChain in allSlimes)
             {
-                foreach(Tile slimeTile in slimeChain)
+                foreach (Tile slimeTile in slimeChain)
                 {
                     slimesToKill.Add(slimeTile);
                 }
@@ -269,7 +249,7 @@ public sealed class Board : MonoBehaviour
     private async Task HandleBlankTiles()
     {
         Sequence inflateSequence = DOTween.Sequence();
-        foreach(Tile tile in Tiles)
+        foreach (Tile tile in Tiles)
         {
             if (!tile.IsNone()) continue;
             tile.Type = ItemDatabase.GetRandomItem().type;
@@ -288,7 +268,7 @@ public sealed class Board : MonoBehaviour
         List<Tile> slimeTiles = null;
 
         Sequence wiggleSequence = DOTween.Sequence();
-        foreach(Tile tile in Tiles)
+        foreach (Tile tile in Tiles)
         {
             tile.UpdateVisual();
             if (tile.IsSlime())
@@ -315,17 +295,17 @@ public sealed class Board : MonoBehaviour
     private async Task KillTiles(Structure structure, AudioClip sfx)
     {
         Sequence deflateSequence = DOTween.Sequence();
-        foreach(Tile tile in structure.Tiles)
+        foreach (Tile tile in structure.Tiles)
         {
             Animate.Kill(tile, deflateSequence);
             ScoreCounter.Instance.Score += ItemDatabase.GetItemValue(tile.Type);
         }
-        
+
         audioSource.PlayOneShot(sfx);
         await deflateSequence.Play().AsyncWaitForCompletion();
 
         List<Tile> excludeTiles = new List<Tile>();
-        
+
         // handle creating bombs
         Item.Types bombType = structure.GetBomb();
         if (bombType != Item.Types.NONE)
@@ -341,7 +321,7 @@ public sealed class Board : MonoBehaviour
         }
         if (structure.type == Item.Types.DEATH) await HandleDeathTiles(structure);
 
-        foreach(Tile tile in structure.Tiles)
+        foreach (Tile tile in structure.Tiles)
         {
             if (excludeTiles.Contains(tile)) continue;
             tile.Type = Item.Types.NONE;
@@ -352,11 +332,11 @@ public sealed class Board : MonoBehaviour
     {
         Sequence growthSequence = DOTween.Sequence();
 
-        foreach(Tile tile in tilesToGrow)
+        foreach (Tile tile in tilesToGrow)
         {
             // if tile is occupied with bomb, skip it
             if (tile.IsBomb()) continue;
-            
+
             tile.Type = Item.Types.SLIME;
             tile.OnUpdatingGrid();
             Animate.Spawn(tile, growthSequence);
@@ -393,23 +373,33 @@ public sealed class Board : MonoBehaviour
         }
         return tilesToKill;
     }
-    
-    private async Task SpawnPlayer()
+
+    private async Task HandleInitialCondition(Level level)
     {
-        List<Tile> playerTiles = new List<Tile>();
-        foreach(Vector2Int position in playerSpawn)
+        Sequence growthSequence = DOTween.Sequence();
+
+        for (int y = 0; y < level.Height; y++)
         {
-            Tile tile = GetTile(position.x, position.y);
-            playerTiles.Add(tile);
+            for (int x = 0; x < level.Width; x++)
+            {
+                Item.Types type = level.GetTile(x, y);
+                if (type != Item.Types.RANDOM)
+                {
+                    Tile tile = Tiles[x, y];
+                    tile.Type = type;
+                    Animate.Spawn(tile, growthSequence);
+                }
+            }
         }
-        ScoreCounter.Instance.Lives = playerTiles.Count;
-        await GrowSlimeTiles(playerTiles);
+
+        audioSource.PlayOneShot(slimeSpawnSound);
+        await growthSequence.Play().AsyncWaitForCompletion();
     }
 
     private bool HasMatches()
     {
         bool hasMatches = false;
-        foreach(Tile tile in Tiles)
+        foreach (Tile tile in Tiles)
         {
             hasMatches = tile.ShouldDestroy();
             if (hasMatches) break;
@@ -418,9 +408,36 @@ public sealed class Board : MonoBehaviour
     }
 
     /////////////////////////////////////////////////////
-    
+
 
     //// HELPERS
+
+    private void CreateGrid(Level level)
+    {
+        foreach (Transform child in transform)
+        {
+            GameObject.Destroy(child.gameObject);
+        }
+
+        Tiles = new Tile[level.Width, level.Height];
+        for (var y = 0; y < Height; y++)
+        {
+            GameObject currentRow = Instantiate(rowPrefab, Vector3.zero, Quaternion.identity, transform);
+            for (var x = 0; x < Width; x++)
+            {
+                GameObject currentTile = Instantiate(tilePrefab, Vector3.zero, Quaternion.identity, currentRow.transform);
+                Tile tile = currentTile.GetComponent<Tile>();
+                tile.x = x;
+                tile.y = y;
+                Tiles[x, y] = tile;
+            }
+        }
+
+        foreach (Tile tile in Tiles)
+        {
+            tile.Initialize();
+        }
+    }
 
     public Tile GetTile(int x, int y)
     {
@@ -431,7 +448,7 @@ public sealed class Board : MonoBehaviour
     private Tile GetCenterTile(List<Tile> tiles)
     {
         Vector2 middlePosition = Vector2.zero;
-        foreach(Tile tile in tiles)
+        foreach (Tile tile in tiles)
         {
             Vector2 tilePosition = tile.GetVector2();
             middlePosition += tilePosition / (float)tiles.Count;
@@ -441,7 +458,7 @@ public sealed class Board : MonoBehaviour
 
         Tile centerTile = null;
         float dist = float.MaxValue;
-        foreach(Tile tile in tiles)
+        foreach (Tile tile in tiles)
         {
             float tileDist = (tile.GetVector2() - middlePosition).SqrMagnitude();
             if (tileDist <= Mathf.Epsilon)

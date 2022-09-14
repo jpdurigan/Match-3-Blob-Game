@@ -4,5 +4,6 @@ using UnityEngine;
 
 public class StartGameButton : MonoBehaviour
 {
-    public void StartGame() => Board.Instance.StartGame();
+    [SerializeField] Level debugLevel;
+    public void StartGame() => Board.Instance.StartLevel(debugLevel);
 }

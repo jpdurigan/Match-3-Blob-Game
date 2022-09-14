@@ -89,7 +89,7 @@ public sealed class Tile : MonoBehaviour
     private bool wasInitialized = false;
 
 
-    private void Start()
+    private void Awake()
     {
         button = GetComponent<Button>();
         _icon = GetComponentsInChildren<Image>()[1];
