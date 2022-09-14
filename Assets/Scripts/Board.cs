@@ -80,6 +80,7 @@ public sealed class Board : MonoBehaviour
         {
             _selection.Remove(tile);
             await Animate.AsyncDeselect(tile);
+            if (tile.IsTriggered) tile.IsTriggered = false;
             shouldBlockSelection = false;
             return;
         }
