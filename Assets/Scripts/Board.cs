@@ -59,7 +59,7 @@ public sealed class Board : MonoBehaviour
     //// MECHANICS
     public async void StartLevel(Level level)
     {
-        MessagePanel.Instance.Hide();
+        if (MessagePanel.Instance.visible) await MessagePanel.Instance.Hide();
 
         CreateGrid(level);
         _selection = new List<Tile>();
@@ -291,7 +291,7 @@ public sealed class Board : MonoBehaviour
         }
         else
         {
-            MessagePanel.Instance.ShowMessage("Game Over!");
+            await MessagePanel.Instance.ShowMessage("Game Over!");
         }
     }
 

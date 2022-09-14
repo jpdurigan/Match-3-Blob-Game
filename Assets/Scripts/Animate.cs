@@ -1,12 +1,13 @@
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UI;
 using DG.Tweening;
 
 public static class Animate
 {
     private const float TWEEN_DURATION = 0.25f;
-    private const float SPAWN_RANDOMNESS = 0.5f;
+    private const float SPAWN_RANDOMNESS = 0.8f;
 
     private static Vector3 SCALE_ALIVE = Vector3.one;
     private static Vector3 SCALE_DEAD = Vector3.zero;
@@ -14,6 +15,9 @@ public static class Animate
 
     private static Color COLOR_ALIVE = Color.white;
     private static Color COLOR_DEAD = new Color(1, 1, 1, 0);
+
+    private static float FADE_IN = 1F;
+    private static float FADE_OUT = 0F;
 
     public static void Spawn(Tile tile, Sequence sequence, float speed = 1f)
     {
@@ -54,6 +58,16 @@ public static class Animate
         float ratio = 0.2f;
         sequence.Insert(0f, tile.icon.transform.DOScale(SCALE_SELECTED, tweenDuration * ratio).SetEase(Ease.OutBack))
                 .Insert(tweenDuration * ratio, tile.icon.transform.DOScale(SCALE_ALIVE, tweenDuration * (1f - ratio)).SetEase(Ease.OutBounce));
+    }
+
+    public static void FadeIn(Graphic graphic, Sequence sequence, float speed = 1f)
+    {
+        sequence.Insert(0f, graphic.DOFade(FADE_IN, TWEEN_DURATION / speed));
+    }
+
+    public static void FadeOut(Graphic graphic, Sequence sequence, float speed = 1f)
+    {
+        sequence.Insert(0f, graphic.DOFade(FADE_OUT, TWEEN_DURATION / speed));
     }
 
 
