@@ -387,6 +387,7 @@ public sealed class Board : MonoBehaviour
                 {
                     Tile tile = Tiles[x, y];
                     tile.Type = type;
+                    tile.OnUpdatingGrid();
                     Animate.Spawn(tile, growthSequence);
                 }
             }
