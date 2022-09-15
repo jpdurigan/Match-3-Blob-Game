@@ -28,6 +28,10 @@ public class ScoreCounter : MonoBehaviour
     [SerializeField] private Image turnsIcon;
     [SerializeField] private Color turnsHighlight = Color.white;
     [Space]
+    [SerializeField] private TextMeshProUGUI livesText;
+    [SerializeField] private Image livesIcon;
+    [SerializeField] private Color livesHighlight = Color.white;
+    [Space]
     [SerializeField] private TextMeshProUGUI targetsText;
     [SerializeField] private Image targetsIcon;
     [SerializeField] private Color targetsHighlight = Color.white;
@@ -44,7 +48,6 @@ public class ScoreCounter : MonoBehaviour
         ShowTitle();
     }
 
-
     public void StartLevel(Level level)
     {
         currentLevel = level;
@@ -55,12 +58,13 @@ public class ScoreCounter : MonoBehaviour
         TurnsLeft = level.turnsAmount;
         turnsText.SetText(TurnsLeft.ToString());
 
+        Lives = level.initialLives;
+        livesText.SetText(Lives.ToString());
+
         TargetsLeft = level.goalAmount;
         targetsText.SetText(TargetsLeft.ToString());
-
         targetsIcon.sprite = ItemDatabase.GetItemSprite(level.goalType);
 
-        Lives = 1;
         ShowLevel();
     }
 
@@ -68,8 +72,8 @@ public class ScoreCounter : MonoBehaviour
     {
         TurnsLeft = Mathf.Max(0, TurnsLeft - 1);
         Sequence sequence = DOTween.Sequence();
-        Animate.UpdateText(turnsText, TurnsLeft.ToString(), sequence, Animate.Options.Speed(0.5f));
-        Animate.HighlightGraphic(turnsIcon, sequence, Animate.Options.Speed(0.5f));
+        Animate.UpdateText(turnsText, TurnsLeft.ToString(), sequence, turnsHighlight, Animate.Options.HUD);
+        Animate.HighlightGraphic(turnsIcon, sequence, turnsHighlight, Animate.Options.HUD);
         sequence.Play();
     }
 
@@ -78,18 +82,25 @@ public class ScoreCounter : MonoBehaviour
         if (type == currentLevel.goalType)
         {
             TargetsLeft = Mathf.Max(0, TargetsLeft - 1);
-            Animate.UpdateText(targetsText, TargetsLeft.ToString(), sequence, Animate.Options.Speed(0.5f));
-            Animate.HighlightGraphic(targetsIcon, sequence, Animate.Options.Speed(0.5f));
+            Animate.UpdateText(targetsText, TargetsLeft.ToString(), sequence, targetsHighlight, Animate.Options.HUD);
+            Animate.HighlightGraphic(targetsIcon, sequence, targetsHighlight, Animate.Options.HUD);
         }
         Score += ItemDatabase.GetItemValue(type);
         Animate.UpdateText(scoreText, Score.ToString(), sequence);
     }
 
-    public async Task AsyncAddToScore(Item.Types type)
+    public void AddLife(Sequence sequence)
     {
-        Sequence sequence = DOTween.Sequence();
-        AddToScore(type, sequence);
-        await sequence.Play().AsyncWaitForCompletion();
+        Lives++;
+        Animate.UpdateText(livesText, Lives.ToString(), sequence, livesHighlight, Animate.Options.HUD);
+        Animate.HighlightGraphic(livesIcon, sequence, livesHighlight, Animate.Options.HUD);
+    }
+
+    public void TakeLife(Sequence sequence)
+    {
+        Lives--;
+        Animate.UpdateText(livesText, Lives.ToString(), sequence, livesHighlight, Animate.Options.HUD);
+        Animate.HighlightGraphic(livesIcon, sequence, livesHighlight, Animate.Options.HUD);
     }
 
     public void ShowTitle()

@@ -16,7 +16,8 @@ public class MessagePanel : MonoBehaviour
     public Message TurnsEndedMessage;
     [HideInInspector] public Message EmptyMessage = new Message("", "", false, false);
 
-    private const float FADE_BG_SHOW = 0.8f;
+    private const float FADE_BG_WITH_TEXT = 0.94f;
+    private const float FADE_BG_WITHOUT_TEXT = 0.3f;
 
     [Space]
     [SerializeField] private Image messageBG;
@@ -29,39 +30,37 @@ public class MessagePanel : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-        messageBG.color = messageBG.color * new Color(1f, 1f, 1f, FADE_BG_SHOW);
+        messageBG.color = messageBG.color * new Color(1f, 1f, 1f, FADE_BG_WITHOUT_TEXT);
         messageMainText.SetText("");
         messageSubText.SetText("");
         visible = true;
     }
 
 
-    public async Task Show()
+    public async Task Show(float fadeBG)
     {
-        if (visible) return;
         visible = true;
         gameObject.SetActive(true);
         Sequence fadeSequence = DOTween.Sequence();
-        Animate.Fade(messageBG, fadeSequence, FADE_BG_SHOW);
-        Animate.FadeIn(messageMainText, fadeSequence);
-        Animate.FadeIn(messageSubText, fadeSequence);
-        Animate.FadeIn(retryButton.image, fadeSequence);
-        Animate.FadeIn(nextButton.image, fadeSequence);
-        Animate.FadeIn(levelSelectButton.image, fadeSequence);
+        Animate.Fade(messageBG, fadeSequence, fadeBG, Animate.Options.Panel);
+        Animate.FadeIn(messageMainText, fadeSequence, Animate.Options.Panel);
+        Animate.FadeIn(messageSubText, fadeSequence, Animate.Options.Panel);
+        Animate.FadeIn(retryButton.image, fadeSequence, Animate.Options.Panel);
+        Animate.FadeIn(nextButton.image, fadeSequence, Animate.Options.Panel);
+        Animate.FadeIn(levelSelectButton.image, fadeSequence, Animate.Options.Panel);
         await fadeSequence.Play().AsyncWaitForCompletion();
     }
 
     public async Task Hide()
     {
-        if (!visible) return;
         visible = false;
         Sequence fadeSequence = DOTween.Sequence();
-        Animate.FadeOut(messageBG, fadeSequence);
-        Animate.FadeOut(messageMainText, fadeSequence);
-        Animate.FadeOut(messageSubText, fadeSequence);
-        Animate.FadeOut(retryButton.image, fadeSequence);
-        Animate.FadeOut(nextButton.image, fadeSequence);
-        Animate.FadeOut(levelSelectButton.image, fadeSequence);
+        Animate.FadeOut(messageBG, fadeSequence, Animate.Options.Panel);
+        Animate.FadeOut(messageMainText, fadeSequence, Animate.Options.Panel);
+        Animate.FadeOut(messageSubText, fadeSequence, Animate.Options.Panel);
+        Animate.FadeOut(retryButton.image, fadeSequence, Animate.Options.Panel);
+        Animate.FadeOut(nextButton.image, fadeSequence, Animate.Options.Panel);
+        Animate.FadeOut(levelSelectButton.image, fadeSequence, Animate.Options.Panel);
         await fadeSequence.Play().AsyncWaitForCompletion();
         gameObject.SetActive(false);
     }
@@ -72,8 +71,10 @@ public class MessagePanel : MonoBehaviour
         messageSubText.SetText(msg.subText);
         retryButton.gameObject.SetActive(msg.showRetry);
         nextButton.gameObject.SetActive(msg.showNext && LevelManager.Instance.HasNextLevel());
-        levelSelectButton.gameObject.SetActive(msg.mainText != "");
-        if (!visible) await Show();
+        levelSelectButton.gameObject.SetActive(!msg.IsEmpty());
+
+        float fadeBG = msg.IsEmpty() ? FADE_BG_WITHOUT_TEXT : FADE_BG_WITH_TEXT;
+        await Show(fadeBG);
     }
 
     [Serializable]
@@ -93,5 +94,7 @@ public class MessagePanel : MonoBehaviour
             this.showRetry = retry;
             this.showNext = next;
         }
+
+        public bool IsEmpty() => mainText == "";
     }
 }

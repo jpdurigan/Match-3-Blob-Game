@@ -84,6 +84,7 @@ public class LevelManager : MonoBehaviour
 
     private void ShowLevels()
     {
+        ScoreCounter.Instance.ShowTitle();
         boardGameObject.SetActive(false);
         levelsGameObject.SetActive(true);
         CreateLevelMap();

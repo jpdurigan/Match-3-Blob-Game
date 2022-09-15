@@ -13,21 +13,37 @@ public static class Animate
         public static float DEFAULT_SPEED = 1f;
         public static float DEFAULT_DELAY = 0f;
         public static float DEFAULT_RANDOM_DELAY = 0.8f;
+        public static float DEFAULT_RATIO = 0.5f;
 
-        public static Options Default = new Options(DEFAULT_DURATION, DEFAULT_DELAY);
+        public static Options Default = new Options(DEFAULT_DURATION, DEFAULT_DELAY, DEFAULT_RATIO);
+        public static Options Wiggle = new Options(DEFAULT_DURATION, DEFAULT_DELAY, 0.2f);
+        public static Options HUD = new Options(DEFAULT_DURATION, DEFAULT_DELAY, 0.35f).SpeedBy(0.5f);
+        public static Options Panel = new Options(DEFAULT_DURATION, DEFAULT_DELAY, DEFAULT_RATIO).SpeedBy(0.85f);
 
         public float duration { get; private set; }
         public float delay { get; private set; }
+        public float ratio { get; private set; } // ratio when animation has 2 states
 
-        public Options(float p_duration, float p_delay)
+        public float inwardsDuration => duration * ratio;
+        public float outwardsDuration => duration * (1f - ratio);
+
+        public Options(float p_duration, float p_delay, float p_ratio)
         {
             duration = p_duration;
             delay = p_delay;
+            ratio = p_ratio;
+        }
+
+        public Options SpeedBy(float speed)
+        {
+            duration /= speed;
+            delay /= speed;
+            return this;
         }
 
         public static Options Delay(float p_delay)
         {
-            return new Options(DEFAULT_DURATION, p_delay);
+            return new Options(DEFAULT_DURATION, p_delay, DEFAULT_RATIO);
         }
 
         public static Options RandomDelay()
@@ -37,17 +53,22 @@ public static class Animate
         public static Options RandomDelay(float randomness)
         {
             float randomDelay = Random.Range(0f, DEFAULT_DURATION) * randomness;
-            return new Options(DEFAULT_DURATION, randomDelay);
+            return new Options(DEFAULT_DURATION, randomDelay, DEFAULT_RATIO);
         }
 
         public static Options Duration(float p_duration)
         {
-            return new Options(p_duration, DEFAULT_DELAY);
+            return new Options(p_duration, DEFAULT_DELAY, DEFAULT_RATIO);
         }
 
         public static Options Speed(float speed)
         {
-            return new Options(DEFAULT_DURATION / speed, DEFAULT_DELAY);
+            return new Options(DEFAULT_DURATION / speed, DEFAULT_DELAY, DEFAULT_RATIO);
+        }
+
+        public static Options Ratio(float p_ratio)
+        {
+            return new Options(DEFAULT_DURATION, DEFAULT_DELAY, p_ratio);
         }
     }
 
@@ -120,11 +141,10 @@ public static class Animate
 
     public static void Wiggle(Tile tile, Sequence sequence, Options options)
     {
-        float ratio = 0.2f;
-        float inwardsDuration = options.duration * ratio;
-        float outwardsDuration = options.duration * (1f - ratio);
-        sequence.Insert(options.delay, tile.icon.transform.DOScale(SCALE_SELECTED, inwardsDuration).SetEase(Ease.OutBack))
-                .Insert(options.delay + inwardsDuration, tile.icon.transform.DOScale(SCALE_ALIVE, outwardsDuration).SetEase(Ease.OutBounce));
+        sequence.Insert(options.delay,
+                        tile.icon.transform.DOScale(SCALE_SELECTED, options.inwardsDuration).SetEase(Ease.OutBack))
+                .Insert(options.delay + options.inwardsDuration,
+                        tile.icon.transform.DOScale(SCALE_ALIVE, options.outwardsDuration).SetEase(Ease.OutBounce));
     }
     public static void Wiggle(Tile tile, Sequence sequence)
     {
@@ -156,39 +176,32 @@ public static class Animate
         Fade(graphic, sequence, FADE_OUT, Options.Default);
     }
 
-    public static void UpdateText(TextMeshProUGUI text, string msg, Sequence sequence, Options options)
+    public static void UpdateText(TextMeshProUGUI text, string msg, Sequence sequence, Color colorMultiply, Options options)
     {
-        Color initialColor = text.color;
-        Color highlightColor = initialColor * COLOR_TEXT_HIGHLIGHT;
-        float ratio = 0.35f;
-        float inwardsDuration = options.duration * ratio;
-        float outwardsDuration = options.duration * (1f - ratio);
-        sequence.Insert(options.delay, text.DOColor(highlightColor, inwardsDuration))
-                .Insert(options.delay, text.transform.DOScale(SCALE_GRAPHIC_EXPAND, inwardsDuration).SetEase(Ease.InCubic))
-                .InsertCallback(options.delay + inwardsDuration, () => text.SetText(msg))
-                .Insert(options.delay + inwardsDuration, text.DOColor(initialColor, outwardsDuration))
-                .Insert(options.delay + inwardsDuration, text.transform.DOScale(SCALE_GRAPHIC_NORMAL, outwardsDuration).SetEase(Ease.OutBack));
+        HighlightGraphic(text, sequence, colorMultiply, options);
+        sequence.InsertCallback(options.delay + options.inwardsDuration, () => text.SetText(msg));
     }
     public static void UpdateText(TextMeshProUGUI text, string msg, Sequence sequence)
     {
-        UpdateText(text, msg, sequence, Options.Default);
+        UpdateText(text, msg, sequence, COLOR_TEXT_HIGHLIGHT, Options.Default);
     }
 
-    public static void HighlightGraphic(Graphic graphic, Sequence sequence, Options options)
+    public static void HighlightGraphic(Graphic graphic, Sequence sequence, Color colorMultiply, Options options)
     {
         Color initialColor = graphic.color;
-        Color highlightColor = initialColor * COLOR_TEXT_HIGHLIGHT;
-        float ratio = 0.35f;
-        float inwardsDuration = options.duration * ratio;
-        float outwardsDuration = options.duration * (1f - ratio);
-        sequence.Insert(options.delay, graphic.DOColor(highlightColor, inwardsDuration))
-                .Insert(options.delay, graphic.transform.DOScale(SCALE_GRAPHIC_EXPAND, inwardsDuration).SetEase(Ease.InCubic))
-                .Insert(options.delay + inwardsDuration, graphic.DOColor(initialColor, outwardsDuration))
-                .Insert(options.delay + inwardsDuration, graphic.transform.DOScale(SCALE_GRAPHIC_NORMAL, outwardsDuration).SetEase(Ease.OutBack));
+        Color highlightColor = initialColor * colorMultiply;
+        sequence.Insert(options.delay,
+                        graphic.DOColor(highlightColor, options.inwardsDuration))
+                .Insert(options.delay,
+                        graphic.transform.DOScale(SCALE_GRAPHIC_EXPAND, options.inwardsDuration).SetEase(Ease.InCubic))
+                .Insert(options.delay + options.inwardsDuration,
+                        graphic.DOColor(initialColor, options.outwardsDuration))
+                .Insert(options.delay + options.inwardsDuration,
+                        graphic.transform.DOScale(SCALE_GRAPHIC_NORMAL, options.outwardsDuration).SetEase(Ease.OutBack));
     }
     public static void HighlightGraphic(Graphic graphic, Sequence sequence)
     {
-        HighlightGraphic(graphic, sequence, Options.Default);
+        HighlightGraphic(graphic, sequence, COLOR_TEXT_HIGHLIGHT, Options.Default);
     }
 
 
@@ -246,6 +259,6 @@ public static class Animate
     }
     public static async Task AsyncWiggle(Tile tile)
     {
-        await AsyncWiggle(tile, Options.Default);
+        await AsyncWiggle(tile, Options.Wiggle);
     }
 }

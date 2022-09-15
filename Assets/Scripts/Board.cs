@@ -332,6 +332,7 @@ public sealed class Board : MonoBehaviour
         {
             Animate.Kill(tile, deflateSequence);
             ScoreCounter.Instance.AddToScore(tile.Type, deflateSequence);
+            if (tile.IsSlime()) ScoreCounter.Instance.TakeLife(deflateSequence);
         }
 
         audioSource.PlayOneShot(sfx);
@@ -373,6 +374,7 @@ public sealed class Board : MonoBehaviour
             tile.Type = Item.Types.SLIME;
             tile.OnUpdatingGrid();
             Animate.Spawn(tile, growthSequence);
+            ScoreCounter.Instance.AddLife(growthSequence);
         }
 
         audioSource.PlayOneShot(slimeSpawnSound);
