@@ -26,6 +26,15 @@ public class LevelEditor : Editor
 
         GUILayout.Label("Parameters", EditorStyles.boldLabel);
 
+        bool newIsAvailable = EditorGUILayout.Toggle("Should be available?", level.isAvailable);
+        if (newIsAvailable != level.isAvailable)
+        {
+            level.isAvailable = newIsAvailable;
+            hasChangedLevelData = true;
+        }
+
+        EditorGUILayout.Separator();
+
         int newTurnsAmount = EditorGUILayout.IntField("Number of Turns", level.turnsAmount);
         if (newTurnsAmount != level.turnsAmount)
         {

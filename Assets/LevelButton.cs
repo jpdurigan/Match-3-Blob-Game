@@ -68,6 +68,6 @@ public class LevelButton : MonoBehaviour
 
     public void OnPressed()
     {
-        Board.Instance.StartLevel(level);
+        LevelManager.Instance.StartLevel(level);
     }
 }

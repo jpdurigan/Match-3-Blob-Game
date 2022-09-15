@@ -77,6 +77,7 @@ public sealed class Board : MonoBehaviour
 
     public async Task PlayerWon()
     {
+        LevelManager.Instance.PlayerWon();
         await MessagePanel.Instance.ShowMessage(MessagePanel.Instance.WinMessage);
     }
 

@@ -13,4 +13,9 @@ MonoBehaviour:
   m_Name: Level-Teste2
   m_EditorClassIdentifier: 
   gridSize: {x: 3, y: 3}
-  initialCondition: 0b0000000b0000000b0000000b00000001000000010000000b0000000b0000000b000000
+  initialCondition: 0b0000000b0000000b0000000300000001000000010000000b0000000300000003000000
+  goalType: 3
+  goalAmount: 3
+  turnsAmount: 5
+  isAvailable: 0
+  isCompleted: 1

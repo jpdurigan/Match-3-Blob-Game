@@ -14,7 +14,7 @@ public class MessagePanel : MonoBehaviour
     public Message WinMessage;
     public Message LostAllLivesMessage;
     public Message TurnsEndedMessage;
-    [HideInInspector] public Message EmptyMessage = new Message("", "");
+    [HideInInspector] public Message EmptyMessage = new Message("", "", false, false);
 
     private const float FADE_BG_SHOW = 0.8f;
 
@@ -22,6 +22,9 @@ public class MessagePanel : MonoBehaviour
     [SerializeField] private Image messageBG;
     [SerializeField] private TextMeshProUGUI messageMainText;
     [SerializeField] private TextMeshProUGUI messageSubText;
+    [SerializeField] private Button retryButton;
+    [SerializeField] private Button nextButton;
+    [SerializeField] private Button levelSelectButton;
 
     private void Awake()
     {
@@ -42,6 +45,9 @@ public class MessagePanel : MonoBehaviour
         Animate.Fade(messageBG, fadeSequence, FADE_BG_SHOW);
         Animate.FadeIn(messageMainText, fadeSequence);
         Animate.FadeIn(messageSubText, fadeSequence);
+        Animate.FadeIn(retryButton.image, fadeSequence);
+        Animate.FadeIn(nextButton.image, fadeSequence);
+        Animate.FadeIn(levelSelectButton.image, fadeSequence);
         await fadeSequence.Play().AsyncWaitForCompletion();
     }
 
@@ -53,6 +59,9 @@ public class MessagePanel : MonoBehaviour
         Animate.FadeOut(messageBG, fadeSequence);
         Animate.FadeOut(messageMainText, fadeSequence);
         Animate.FadeOut(messageSubText, fadeSequence);
+        Animate.FadeOut(retryButton.image, fadeSequence);
+        Animate.FadeOut(nextButton.image, fadeSequence);
+        Animate.FadeOut(levelSelectButton.image, fadeSequence);
         await fadeSequence.Play().AsyncWaitForCompletion();
         gameObject.SetActive(false);
     }
@@ -61,6 +70,9 @@ public class MessagePanel : MonoBehaviour
     {
         messageMainText.SetText(msg.mainText);
         messageSubText.SetText(msg.subText);
+        retryButton.gameObject.SetActive(msg.showRetry);
+        nextButton.gameObject.SetActive(msg.showNext && LevelManager.Instance.HasNextLevel());
+        levelSelectButton.gameObject.SetActive(msg.mainText != "");
         if (!visible) await Show();
     }
 
@@ -71,11 +83,15 @@ public class MessagePanel : MonoBehaviour
         public string mainText;
         [TextArea(1,3)]
         public string subText;
+        public bool showRetry;
+        public bool showNext;
 
-        public Message(string main, string sub)
+        public Message(string main, string sub, bool retry, bool next)
         {
             this.mainText = main;
             this.subText = sub;
+            this.showRetry = retry;
+            this.showNext = next;
         }
     }
 }
