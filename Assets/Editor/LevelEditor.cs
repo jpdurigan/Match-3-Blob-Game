@@ -22,13 +22,42 @@ public class LevelEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        // update grid size
-        Vector2Int newGridSize = EditorGUILayout.Vector2IntField(
-            "Grid Size", level.gridSize
-        );
+        bool hasChangedLevelData = false;
 
-        bool hasSizeChanged = level.gridSize != newGridSize;
-        if (hasSizeChanged)
+        GUILayout.Label("Parameters", EditorStyles.boldLabel);
+
+        int newTurnsAmount = EditorGUILayout.IntField("Number of Turns", level.turnsAmount);
+        if (newTurnsAmount != level.turnsAmount)
+        {
+            level.turnsAmount = newTurnsAmount;
+            hasChangedLevelData = true;
+        }
+
+        EditorGUILayout.Separator();
+
+        GUILayout.Label("Goal");
+        Item.Types newGoalType = (Item.Types)EditorGUILayout.EnumPopup("Item", level.goalType);
+        if (newGoalType != level.goalType)
+        {
+            level.goalType = newGoalType;
+            hasChangedLevelData = true;
+        }
+
+        int newGoalAmount = EditorGUILayout.IntField("Amount", level.goalAmount);
+        if (newGoalAmount != level.goalAmount)
+        {
+            level.goalAmount = newGoalAmount;
+            hasChangedLevelData = true;
+        }
+
+        EditorGUILayout.Separator();
+        EditorGUILayout.Separator();
+
+        GUILayout.Label("Grid", EditorStyles.boldLabel);
+
+        // update grid size
+        Vector2Int newGridSize = EditorGUILayout.Vector2IntField("Size", level.gridSize);
+        if (newGridSize != level.gridSize)
         {
             Vector2Int oldGridSize = level.gridSize;
             level.gridSize = newGridSize;
@@ -42,7 +71,6 @@ public class LevelEditor : Editor
                 shouldResize = false;
             }
         }
-
         // activate button for resizing
         if (shouldResize)
         {
@@ -53,10 +81,10 @@ public class LevelEditor : Editor
             }
         }
 
-        GUILayout.Space(SIZE_SPACE);
+        EditorGUILayout.Separator();
+
         // update initial condition
         GUILayout.Label("Initial Condition");
-        bool hasInitialConditionChanged = false;
         for (int y = 0; y < initialConditionGridSize.y; y++)
         {
             GUILayout.BeginHorizontal();
@@ -68,14 +96,15 @@ public class LevelEditor : Editor
                 {
                     int index = level.GetTileIndex(x, y, initialConditionGridSize);
                     level.initialCondition[index] = selectedType;
-                    hasInitialConditionChanged = true;
+                    hasChangedLevelData = true;
                     ItemDatabase.GetItemTexture(selectedType);
                 }
             }
             GUILayout.EndHorizontal();
         }
 
-        GUILayout.Space(SIZE_SPACE);
+        EditorGUILayout.Separator();
+
         // update initial condition
         GUILayout.Label("Preview");
         for (int y = 0; y < initialConditionGridSize.y; y++)
@@ -85,12 +114,18 @@ public class LevelEditor : Editor
             {
                 Item.Types type = level.GetTile(x, y, initialConditionGridSize);
                 Texture texture = ItemDatabase.GetItemTexture(type);
-                GUILayout.Button(texture, GUILayout.Width(SIZE_PREVIEW), GUILayout.Height(SIZE_PREVIEW));
+                bool pressed = GUILayout.Button(texture, GUILayout.Width(SIZE_PREVIEW), GUILayout.Height(SIZE_PREVIEW));
+                if (pressed)
+                {
+                    int newType = ((int)type + 1) % (int)Item.Types.INVALID;
+                    int index = level.GetTileIndex(x, y, initialConditionGridSize);
+                    level.initialCondition[index] = (Item.Types)newType;
+                }
             }
             GUILayout.EndHorizontal();
         }
 
-        if (hasSizeChanged || hasInitialConditionChanged) EditorUtility.SetDirty(level);
+        if (hasChangedLevelData) EditorUtility.SetDirty(level);
     }
 
     private Item.Types[] ResizeInitialCondition(Item.Types[] condition, Vector2Int oldSize, Vector2Int newSize)
