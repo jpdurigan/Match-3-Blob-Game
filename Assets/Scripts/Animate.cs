@@ -36,7 +36,7 @@ public static class Animate
         }
         public static Options RandomDelay(float randomness)
         {
-            float randomDelay = Random.Range(0f, TWEEN_DURATION) * randomness;
+            float randomDelay = Random.Range(0f, DEFAULT_DURATION) * randomness;
             return new Options(DEFAULT_DURATION, randomDelay);
         }
 
@@ -52,12 +52,11 @@ public static class Animate
     }
 
 
-    private const float TWEEN_DURATION = 0.25f;
-    private const float SPAWN_RANDOMNESS = 0.8f;
-
     private static Vector3 SCALE_ALIVE = Vector3.one;
     private static Vector3 SCALE_DEAD = Vector3.zero;
     private static Vector3 SCALE_SELECTED = Vector3.one * 0.8f;
+    private static Vector3 SCALE_GRAPHIC_NORMAL = Vector3.one;
+    private static Vector3 SCALE_GRAPHIC_EXPAND = Vector3.one * 1.8f;
 
     private static Color COLOR_ALIVE = Color.white;
     private static Color COLOR_DEAD = new Color(1, 1, 1, 0);
@@ -161,14 +160,31 @@ public static class Animate
         float inwardsDuration = options.duration * ratio;
         float outwardsDuration = options.duration * (1f - ratio);
         sequence.Insert(options.delay, text.DOColor(highlightColor, inwardsDuration))
-                .Insert(options.delay, text.transform.DOScaleY(SCALE_Y_SQUISHY, inwardsDuration).SetEase(Ease.InCubic))
+                .Insert(options.delay, text.transform.DOScale(SCALE_GRAPHIC_EXPAND, inwardsDuration).SetEase(Ease.InCubic))
                 .InsertCallback(options.delay + inwardsDuration, () => text.SetText(msg))
                 .Insert(options.delay + inwardsDuration, text.DOColor(initialColor, outwardsDuration))
-                .Insert(options.delay + inwardsDuration, text.transform.DOScaleY(SCALE_Y_NORMAL, outwardsDuration).SetEase(Ease.OutBack));
+                .Insert(options.delay + inwardsDuration, text.transform.DOScale(SCALE_GRAPHIC_NORMAL, outwardsDuration).SetEase(Ease.OutBack));
     }
     public static void UpdateText(TextMeshProUGUI text, string msg, Sequence sequence)
     {
         UpdateText(text, msg, sequence, Options.Default);
+    }
+
+    public static void HighlightGraphic(Graphic graphic, Sequence sequence, Options options)
+    {
+        Color initialColor = graphic.color;
+        Color highlightColor = initialColor * COLOR_TEXT_HIGHLIGHT;
+        float ratio = 0.35f;
+        float inwardsDuration = options.duration * ratio;
+        float outwardsDuration = options.duration * (1f - ratio);
+        sequence.Insert(options.delay, graphic.DOColor(highlightColor, inwardsDuration))
+                .Insert(options.delay, graphic.transform.DOScale(SCALE_GRAPHIC_EXPAND, inwardsDuration).SetEase(Ease.InCubic))
+                .Insert(options.delay + inwardsDuration, graphic.DOColor(initialColor, outwardsDuration))
+                .Insert(options.delay + inwardsDuration, graphic.transform.DOScale(SCALE_GRAPHIC_NORMAL, outwardsDuration).SetEase(Ease.OutBack));
+    }
+    public static void HighlightGraphic(Graphic graphic, Sequence sequence)
+    {
+        HighlightGraphic(graphic, sequence, Options.Default);
     }
 
 

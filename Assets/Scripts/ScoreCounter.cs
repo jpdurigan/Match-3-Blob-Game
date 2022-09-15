@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UI;
 using DG.Tweening;
 using TMPro;
 
@@ -10,33 +11,32 @@ public class ScoreCounter : MonoBehaviour
     public static ScoreCounter Instance { get; private set; }
 
     public int Score { get; private set; } = -1;
-    // public string ScoreFormatted => $"{Score:D8}";
     public int TurnsLeft { get; private set; } = -1;
-    // public string TurnsLeftFormatted => $"{TurnsLeft:D2}";
     public int TargetsLeft { get; private set; } = -1;
     public int Lives { get; private set; } = -1;
-    // public string TargetsLeftFormatted => $"{TargetsLeft:D2}";
-    // public int Lives
-    // {
-    //     get => _lives;
-    //     set
-    //     {
-    //         if (_lives == value) return;
-    //         _lives = value;
-    //         // livesText.SetText($"{_lives:D2}");
-    //         Animate.AsyncUpdateText(livesText, $"{_lives:D2}");
-    //     }
-    // }
+
+    public bool HasNoTurnLeft => currentLevel != null && TurnsLeft <= 0;
+    public bool HasNoLivesLeft => currentLevel != null && Lives <= 0;
+    public bool HasNoTargetsGoal => currentLevel != null && TargetsLeft <= 0;
+    public bool HasPlayerWon => HasNoTargetsGoal;
+    public bool HasPlayerLost => HasNoTurnLeft || HasNoLivesLeft;
 
     [SerializeField] private TextMeshProUGUI scoreText;
     [SerializeField] private TextMeshProUGUI turnsText;
+    [SerializeField] private Image turnsIcon;
     [SerializeField] private TextMeshProUGUI targetsText;
+    [SerializeField] private Image targetsIcon;
+
+    [Space]
+    [SerializeField] private GameObject UITitle;
+    [SerializeField] private GameObject UILevel;
 
     private Level currentLevel = null;
 
     private void Awake()
     {
         Instance = this;
+        ShowTitle();
     }
 
 
@@ -53,27 +53,49 @@ public class ScoreCounter : MonoBehaviour
         TargetsLeft = level.goalAmount;
         targetsText.SetText(TargetsLeft.ToString());
 
+        targetsIcon.sprite = ItemDatabase.GetItemSprite(level.goalType);
+
         Lives = 1;
+        ShowLevel();
+    }
+
+    public void OnSuccessfullSwap()
+    {
+        TurnsLeft = Mathf.Max(0, TurnsLeft - 1);
+        Sequence sequence = DOTween.Sequence();
+        Animate.UpdateText(turnsText, TurnsLeft.ToString(), sequence);
+        Animate.HighlightGraphic(turnsIcon, sequence);
+        sequence.Play();
     }
 
     public void AddToScore(Item.Types type, Sequence sequence)
     {
         if (type == currentLevel.goalType)
         {
-            TargetsLeft--;
+            TargetsLeft = Mathf.Max(0, TargetsLeft - 1);
             Animate.UpdateText(targetsText, TargetsLeft.ToString(), sequence);
+            Animate.HighlightGraphic(targetsIcon, sequence);
         }
         Score += ItemDatabase.GetItemValue(type);
         Animate.UpdateText(scoreText, Score.ToString(), sequence);
     }
-
-    
 
     public async Task AsyncAddToScore(Item.Types type)
     {
         Sequence sequence = DOTween.Sequence();
         AddToScore(type, sequence);
         await sequence.Play().AsyncWaitForCompletion();
+    }
+
+    public void ShowTitle()
+    {
+        UITitle.SetActive(true);
+        UILevel.SetActive(false);
+    }
+    public void ShowLevel()
+    {
+        UITitle.SetActive(false);
+        UILevel.SetActive(true);
     }
 
 }

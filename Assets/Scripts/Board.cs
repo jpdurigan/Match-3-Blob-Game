@@ -16,6 +16,7 @@ public sealed class Board : MonoBehaviour
         HANDLE_FLOATING,
         HANDLE_SLIME,
         HANDLE_BLANK,
+        CHECK_WIN_LOSE_CONDITION,
         DONE,
     }
 
@@ -73,6 +74,16 @@ public sealed class Board : MonoBehaviour
         ScoreCounter.Instance.StartLevel(level);
     }
 
+    public async Task PlayerWon()
+    {
+        await MessagePanel.Instance.ShowMessage("Congrats!");
+    }
+
+    public async Task PlayerLost()
+    {
+        await MessagePanel.Instance.ShowMessage("Game Over!");
+    }
+
     public async void Select(Tile tile)
     {
         if (shouldBlockSelection) return;
@@ -114,6 +125,7 @@ public sealed class Board : MonoBehaviour
 
         if (HasMatches())
         {
+            ScoreCounter.Instance.OnSuccessfullSwap();
             await HandleGrid();
         }
         else
@@ -158,7 +170,20 @@ public sealed class Board : MonoBehaviour
                     // print("// ENTERED JOB: HANDLE_SLIME");
                     hasChangedGrid = await HandleSlimeTiles();
                     // print("// EXITED JOB: HANDLE_SLIME");
-                    job = hasChangedGrid ? Jobs.HANDLE_FLOATING : Jobs.HANDLE_BLANK;
+                    job = hasChangedGrid ? Jobs.HANDLE_FLOATING : Jobs.CHECK_WIN_LOSE_CONDITION;
+                    break;
+                case Jobs.CHECK_WIN_LOSE_CONDITION:
+                    if (ScoreCounter.Instance.HasPlayerWon)
+                    {
+                        await PlayerWon();
+                        return;
+                    }
+                    else if (ScoreCounter.Instance.HasPlayerLost)
+                    {
+                        await PlayerLost();
+                        return;
+                    }
+                    job = Jobs.HANDLE_BLANK;
                     break;
                 case Jobs.HANDLE_BLANK:
                     // print("// ENTERED JOB: HANDLE_BLANK");
