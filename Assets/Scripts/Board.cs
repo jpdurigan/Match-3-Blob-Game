@@ -516,7 +516,7 @@ public sealed class Board : MonoBehaviour
     private async Task AsyncSwap(Tile tile1, Tile tile2, float animSpeed = 1f)
     {
         // animate movement
-        await Animate.AsyncSwap(tile1, tile2, animSpeed);
+        await Animate.AsyncSwap(tile1, tile2, Animate.Options.Speed(animSpeed));
         // swap data
         SwapData(tile1, tile2);
     }

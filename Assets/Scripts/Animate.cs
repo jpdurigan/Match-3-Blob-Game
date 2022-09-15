@@ -7,6 +7,51 @@ using TMPro;
 
 public static class Animate
 {
+    public class Options
+    {
+        public static float DEFAULT_DURATION = 0.25f;
+        public static float DEFAULT_SPEED = 1f;
+        public static float DEFAULT_DELAY = 0f;
+        public static float DEFAULT_RANDOM_DELAY = 0.8f;
+
+        public static Options Default = new Options(DEFAULT_DURATION, DEFAULT_DELAY);
+
+        public float duration { get; private set; }
+        public float delay { get; private set; }
+
+        public Options(float p_duration, float p_delay)
+        {
+            duration = p_duration;
+            delay = p_delay;
+        }
+
+        public static Options Delay(float p_delay)
+        {
+            return new Options(DEFAULT_DURATION, p_delay);
+        }
+
+        public static Options RandomDelay()
+        {
+            return RandomDelay(DEFAULT_RANDOM_DELAY);
+        }
+        public static Options RandomDelay(float randomness)
+        {
+            float randomDelay = Random.Range(0f, TWEEN_DURATION) * randomness;
+            return new Options(DEFAULT_DURATION, randomDelay);
+        }
+
+        public static Options Duration(float p_duration)
+        {
+            return new Options(p_duration, DEFAULT_DELAY);
+        }
+
+        public static Options Speed(float speed)
+        {
+            return new Options(DEFAULT_DURATION / speed, DEFAULT_DELAY);
+        }
+    }
+
+
     private const float TWEEN_DURATION = 0.25f;
     private const float SPAWN_RANDOMNESS = 0.8f;
 
@@ -25,112 +70,162 @@ public static class Animate
     private static float SCALE_Y_NORMAL = 1f;
     private static float SCALE_Y_SQUISHY = 0.76f;
 
-    public static void Spawn(Tile tile, Sequence sequence, float speed = 1f)
+    public static void Spawn(Tile tile, Sequence sequence, Options options)
     {
-        float randomDelay = Random.Range(0f, TWEEN_DURATION) * SPAWN_RANDOMNESS / speed;
         sequence.Insert(0f, tile.icon.transform.DOScale(SCALE_DEAD, 0f))
-                .Insert(0f, tile.icon.DOColor(COLOR_ALIVE, TWEEN_DURATION / speed))
-                .Insert(randomDelay, tile.icon.transform.DOScale(SCALE_ALIVE, TWEEN_DURATION / speed));
+                .Insert(0f, tile.icon.DOColor(COLOR_ALIVE, options.duration))
+                .Insert(options.delay, tile.icon.transform.DOScale(SCALE_ALIVE, options.duration));
     }
-
-    public static void Kill(Tile tile, Sequence sequence, float speed = 1f)
+    public static void Spawn(Tile tile, Sequence sequence)
     {
-        sequence.Insert(0f, tile.icon.transform.DOScale(SCALE_DEAD, TWEEN_DURATION / speed))
-                .Insert(0f, tile.icon.DOColor(COLOR_DEAD, TWEEN_DURATION / speed))
-                .InsertCallback(TWEEN_DURATION / speed, () => tile.eyes.enabled = false);
+        Spawn(tile, sequence, Options.Default);
     }
 
-    public static void Swap(Tile tile1, Tile tile2, Sequence sequence, float speed = 1f)
+    public static void Kill(Tile tile, Sequence sequence, Options options)
+    {
+        sequence.Insert(options.delay, tile.icon.transform.DOScale(SCALE_DEAD, options.duration))
+                .Insert(options.delay, tile.icon.DOColor(COLOR_DEAD, options.duration))
+                .InsertCallback(options.delay + options.duration, () => tile.eyes.enabled = false);
+    }
+    public static void Kill(Tile tile, Sequence sequence)
+    {
+        Kill(tile, sequence, Options.Default);
+    }
+
+    public static void Swap(Tile tile1, Tile tile2, Sequence sequence, Options options)
     {
         Transform tile1Transform = tile1.icon.transform;
         Transform tile2Transform = tile2.icon.transform;
-        sequence.Insert(0f, tile1Transform.DOMove(tile2Transform.position, TWEEN_DURATION / speed))
-                .Insert(0f, tile2Transform.DOMove(tile1Transform.position, TWEEN_DURATION / speed));
+        sequence.Insert(options.delay, tile1Transform.DOMove(tile2Transform.position, options.duration))
+                .Insert(options.delay, tile2Transform.DOMove(tile1Transform.position, options.duration));
+    }
+    public static void Swap(Tile tile1, Tile tile2, Sequence sequence)
+    {
+        Swap(tile1, tile2, sequence, Options.Default);
     }
 
-    public static void Select(Tile tile, Sequence sequence, float speed = 1f)
+    public static void Select(Tile tile, Sequence sequence, Options options)
     {
-        sequence.Insert(0f, tile.icon.transform.DOScale(SCALE_SELECTED, TWEEN_DURATION / speed));
+        sequence.Insert(options.delay, tile.icon.transform.DOScale(SCALE_SELECTED, options.duration));
+    }
+    public static void Select(Tile tile, Sequence sequence)
+    {
+        Select(tile, sequence, Options.Default);
     }
 
-    public static void Deselect(Tile tile, Sequence sequence, float speed = 1f)
+    public static void Deselect(Tile tile, Sequence sequence, Options options)
     {
-        sequence.Insert(0f, tile.icon.transform.DOScale(SCALE_ALIVE, TWEEN_DURATION / speed));
+        sequence.Insert(options.delay, tile.icon.transform.DOScale(SCALE_ALIVE, options.duration));
+    }
+    public static void Deselect(Tile tile, Sequence sequence)
+    {
+        Deselect(tile, sequence, Options.Default);
     }
 
-    public static void Wiggle(Tile tile, Sequence sequence, float speed = 1f)
+    public static void Wiggle(Tile tile, Sequence sequence, Options options)
     {
-        float tweenDuration = TWEEN_DURATION / speed;
         float ratio = 0.2f;
-        sequence.Insert(0f, tile.icon.transform.DOScale(SCALE_SELECTED, tweenDuration * ratio).SetEase(Ease.OutBack))
-                .Insert(tweenDuration * ratio, tile.icon.transform.DOScale(SCALE_ALIVE, tweenDuration * (1f - ratio)).SetEase(Ease.OutBounce));
+        float inwardsDuration = options.duration * ratio;
+        float outwardsDuration = options.duration * (1f - ratio);
+        sequence.Insert(options.delay, tile.icon.transform.DOScale(SCALE_SELECTED, inwardsDuration).SetEase(Ease.OutBack))
+                .Insert(options.delay + inwardsDuration, tile.icon.transform.DOScale(SCALE_ALIVE, outwardsDuration).SetEase(Ease.OutBounce));
     }
-
-    public static void FadeIn(Graphic graphic, Sequence sequence, float speed = 1f)
+    public static void Wiggle(Tile tile, Sequence sequence)
     {
-        sequence.Insert(0f, graphic.DOFade(FADE_IN, TWEEN_DURATION / speed));
+        Wiggle(tile, sequence, Options.Default);
     }
 
-    public static void FadeOut(Graphic graphic, Sequence sequence, float speed = 1f)
+    public static void FadeIn(Graphic graphic, Sequence sequence, Options options)
     {
-        sequence.Insert(0f, graphic.DOFade(FADE_OUT, TWEEN_DURATION / speed));
+        sequence.Insert(options.delay, graphic.DOFade(FADE_IN, options.duration));
+    }
+    public static void FadeIn(Graphic graphic, Sequence sequence)
+    {
+        FadeIn(graphic, sequence, Options.Default);
     }
 
-    public static void UpdateText(TextMeshProUGUI text, string msg, Sequence sequence, float speed = 1f)
+    public static void FadeOut(Graphic graphic, Sequence sequence, Options options)
+    {
+        sequence.Insert(options.delay, graphic.DOFade(FADE_OUT, options.duration));
+    }
+    public static void FadeOut(Graphic graphic, Sequence sequence)
+    {
+        FadeOut(graphic, sequence, Options.Default);
+    }
+
+    public static void UpdateText(TextMeshProUGUI text, string msg, Sequence sequence, Options options)
     {
         Color initialColor = text.color;
         Color highlightColor = initialColor * COLOR_TEXT_HIGHLIGHT;
-        float tweenDuration = TWEEN_DURATION / (2 * speed);
-        sequence.Insert(0f, text.DOColor(highlightColor, tweenDuration))
-                .Insert(0f, text.transform.DOScaleY(SCALE_Y_SQUISHY, tweenDuration).SetEase(Ease.InCubic))
-                .InsertCallback(tweenDuration, () => text.SetText(msg))
-                .Insert(tweenDuration, text.DOColor(initialColor, tweenDuration))
-                .Insert(tweenDuration, text.transform.DOScaleY(SCALE_Y_NORMAL, tweenDuration).SetEase(Ease.OutBack));
+        float ratio = 0.35f;
+        float inwardsDuration = options.duration * ratio;
+        float outwardsDuration = options.duration * (1f - ratio);
+        sequence.Insert(options.delay, text.DOColor(highlightColor, inwardsDuration))
+                .Insert(options.delay, text.transform.DOScaleY(SCALE_Y_SQUISHY, inwardsDuration).SetEase(Ease.InCubic))
+                .InsertCallback(options.delay + inwardsDuration, () => text.SetText(msg))
+                .Insert(options.delay + inwardsDuration, text.DOColor(initialColor, outwardsDuration))
+                .Insert(options.delay + inwardsDuration, text.transform.DOScaleY(SCALE_Y_NORMAL, outwardsDuration).SetEase(Ease.OutBack));
+    }
+    public static void UpdateText(TextMeshProUGUI text, string msg, Sequence sequence)
+    {
+        UpdateText(text, msg, sequence, Options.Default);
     }
 
 
-
-    public static async Task AsyncSwap(Tile tile1, Tile tile2, float speed = 1f)
+    public static async Task AsyncSwap(Tile tile1, Tile tile2, Options options)
     {
         Sequence sequence = DOTween.Sequence();
-        Swap(tile1, tile2, sequence, speed);
-        Deselect(tile1, sequence, speed);
-        Deselect(tile2, sequence, speed);
+        Swap(tile1, tile2, sequence, options);
+        Deselect(tile1, sequence, options);
+        Deselect(tile2, sequence, options);
         await sequence.Play().AsyncWaitForCompletion();
     }
-
-    public static async Task AsyncSelect(Tile tile, float speed = 1f)
+    public static async Task AsyncSwap(Tile tile1, Tile tile2)
     {
-        Sequence sequence = DOTween.Sequence();
-        Select(tile, sequence, speed);
-        await sequence.Play().AsyncWaitForCompletion();
+        await AsyncSwap(tile1, tile2, Options.Default);
     }
 
-    public static async Task AsyncDeselect(Tile tile, float speed = 1f)
+    public static async Task AsyncSelect(Tile tile, Options options)
     {
         Sequence sequence = DOTween.Sequence();
-        Deselect(tile, sequence, speed);
+        Select(tile, sequence, options);
         await sequence.Play().AsyncWaitForCompletion();
     }
-
-    public static async Task AsyncSpawn(Tile tile, float speed = 1f)
+    public static async Task AsyncSelect(Tile tile)
     {
-        Sequence sequence = DOTween.Sequence();
-        Spawn(tile, sequence, speed);
-        await sequence.Play().AsyncWaitForCompletion();
+        await AsyncSelect(tile, Options.Default);
     }
 
-    public static async Task AsyncWiggle(Tile tile, float speed = 1f)
+    public static async Task AsyncDeselect(Tile tile, Options options)
     {
         Sequence sequence = DOTween.Sequence();
-        Wiggle(tile, sequence, speed);
+        Deselect(tile, sequence, options);
         await sequence.Play().AsyncWaitForCompletion();
     }
+    public static async Task AsyncDeselect(Tile tile)
+    {
+        await AsyncDeselect(tile, Options.Default);
+    }
 
-    public static async Task AsyncUpdateText(TextMeshProUGUI text, string msg, float speed = 1f)
+    public static async Task AsyncSpawn(Tile tile, Options options)
     {
         Sequence sequence = DOTween.Sequence();
-        UpdateText(text, msg, sequence, speed);
+        Spawn(tile, sequence, options);
         await sequence.Play().AsyncWaitForCompletion();
+    }
+    public static async Task AsyncSpawn(Tile tile)
+    {
+        await AsyncSpawn(tile, Options.Default);
+    }
+
+    public static async Task AsyncWiggle(Tile tile, Options options)
+    {
+        Sequence sequence = DOTween.Sequence();
+        Wiggle(tile, sequence, options);
+        await sequence.Play().AsyncWaitForCompletion();
+    }
+    public static async Task AsyncWiggle(Tile tile)
+    {
+        await AsyncWiggle(tile, Options.Default);
     }
 }
