@@ -50,6 +50,7 @@ public static class SpecialItem
                 };
                 break;
         }
+        tiles.RemoveAll((tile) => tile.IsBlock());
         return tiles;
     }
 }

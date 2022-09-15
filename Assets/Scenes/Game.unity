@@ -312,7 +312,6 @@ GameObject:
   - component: {fileID: 84525381}
   - component: {fileID: 84525383}
   - component: {fileID: 84525382}
-  - component: {fileID: 84525384}
   - component: {fileID: 84525385}
   m_Layer: 5
   m_Name: MessagePanel
@@ -338,7 +337,7 @@ RectTransform:
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -380,20 +379,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 84525380}
   m_CullTransparentMesh: 1
---- !u!114 &84525384
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 84525380}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86710e43de46f6f4bac7c8e50813a599, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_AspectMode: 3
-  m_AspectRatio: 1
 --- !u!114 &84525385
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -926,7 +911,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f0b29b0ef21a444f8813932c387f133c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  debugLevel: {fileID: 11400000, guid: 58aeeabdaf4714a878a9b22cd4cbcb8b, type: 2}
+  debugLevel: {fileID: 11400000, guid: 22a45d398fb7b49759d22fec82124454, type: 2}
 --- !u!114 &497145306
 MonoBehaviour:
   m_ObjectHideFlags: 0

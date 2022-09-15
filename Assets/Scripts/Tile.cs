@@ -140,7 +140,7 @@ public sealed class Tile : MonoBehaviour
 
     public bool ShouldDestroy()
     {
-        if (IsSlime()) return false;
+        if (IsSlime() || IsBlock()) return false;
         if (IsBomb()) return IsTriggered;
 
         bool shouldDestroy = false;
@@ -288,6 +288,11 @@ public sealed class Tile : MonoBehaviour
     public bool IsSlime()
     {
         return Is(Item.Types.SLIME);
+    }
+
+    public bool IsBlock()
+    {
+        return Is(Item.Types.BLOCK);
     }
     
     public bool IsBomb()

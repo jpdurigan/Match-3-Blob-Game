@@ -199,6 +199,7 @@ public sealed class Board : MonoBehaviour
             for (int y = Height - 1; y >= 0f; y--)
             {
                 Tile tile = Tiles[x, y];
+                if (tile.IsBlock()) continue;
                 if (!tile.IsNone() && blankTile != null)
                 {
                     y = blankTile.y;
@@ -424,6 +425,7 @@ public sealed class Board : MonoBehaviour
             GameObject.Destroy(child.gameObject);
         }
 
+        GetComponent<AspectRatioFitter>().aspectRatio = (float)level.Width / (float)level.Height;
         Tiles = new Tile[level.Width, level.Height];
         for (var y = 0; y < Height; y++)
         {
