@@ -60,28 +60,30 @@ public sealed class Board : MonoBehaviour
     //// MECHANICS
     public async void StartLevel(Level level)
     {
-        if (MessagePanel.Instance.visible) await MessagePanel.Instance.Hide();
-
         CreateGrid(level);
         _selection = new List<Tile>();
         shouldBlockSelection = false;
+        
+        await MessagePanel.Instance.ShowMessage(MessagePanel.Instance.EmptyMessage);
+
+        ScoreCounter.Instance.StartLevel(level);
 
         await HandleInitialCondition(level);
         await HandleBlankTiles();
         await HandleGridVisual();
 
-        // ScoreCounter.Instance.Score = 0;
-        ScoreCounter.Instance.StartLevel(level);
+        await MessagePanel.Instance.Hide();
     }
 
     public async Task PlayerWon()
     {
-        await MessagePanel.Instance.ShowMessage("Congrats!");
+        await MessagePanel.Instance.ShowMessage(MessagePanel.Instance.WinMessage);
     }
 
     public async Task PlayerLost()
     {
-        await MessagePanel.Instance.ShowMessage("Game Over!");
+        if (ScoreCounter.Instance.HasNoLivesLeft) await MessagePanel.Instance.ShowMessage(MessagePanel.Instance.LostAllLivesMessage);
+        else if (ScoreCounter.Instance.HasNoTurnLeft) await MessagePanel.Instance.ShowMessage(MessagePanel.Instance.TurnsEndedMessage);
     }
 
     public async void Select(Tile tile)
@@ -318,7 +320,7 @@ public sealed class Board : MonoBehaviour
         }
         else
         {
-            await MessagePanel.Instance.ShowMessage("Game Over!");
+            // await MessagePanel.Instance.ShowMessage("Game Over!");
         }
     }
 

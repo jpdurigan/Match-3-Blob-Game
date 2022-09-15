@@ -22,10 +22,15 @@ public class ScoreCounter : MonoBehaviour
     public bool HasPlayerLost => HasNoTurnLeft || HasNoLivesLeft;
 
     [SerializeField] private TextMeshProUGUI scoreText;
+    [SerializeField] private Color scoreHighlight = Color.white;
+    [Space]
     [SerializeField] private TextMeshProUGUI turnsText;
     [SerializeField] private Image turnsIcon;
+    [SerializeField] private Color turnsHighlight = Color.white;
+    [Space]
     [SerializeField] private TextMeshProUGUI targetsText;
     [SerializeField] private Image targetsIcon;
+    [SerializeField] private Color targetsHighlight = Color.white;
 
     [Space]
     [SerializeField] private GameObject UITitle;
@@ -63,8 +68,8 @@ public class ScoreCounter : MonoBehaviour
     {
         TurnsLeft = Mathf.Max(0, TurnsLeft - 1);
         Sequence sequence = DOTween.Sequence();
-        Animate.UpdateText(turnsText, TurnsLeft.ToString(), sequence);
-        Animate.HighlightGraphic(turnsIcon, sequence);
+        Animate.UpdateText(turnsText, TurnsLeft.ToString(), sequence, Animate.Options.Speed(0.5f));
+        Animate.HighlightGraphic(turnsIcon, sequence, Animate.Options.Speed(0.5f));
         sequence.Play();
     }
 
@@ -73,8 +78,8 @@ public class ScoreCounter : MonoBehaviour
         if (type == currentLevel.goalType)
         {
             TargetsLeft = Mathf.Max(0, TargetsLeft - 1);
-            Animate.UpdateText(targetsText, TargetsLeft.ToString(), sequence);
-            Animate.HighlightGraphic(targetsIcon, sequence);
+            Animate.UpdateText(targetsText, TargetsLeft.ToString(), sequence, Animate.Options.Speed(0.5f));
+            Animate.HighlightGraphic(targetsIcon, sequence, Animate.Options.Speed(0.5f));
         }
         Score += ItemDatabase.GetItemValue(type);
         Animate.UpdateText(scoreText, Score.ToString(), sequence);

@@ -61,13 +61,10 @@ public static class Animate
     private static Color COLOR_ALIVE = Color.white;
     private static Color COLOR_DEAD = new Color(1, 1, 1, 0);
     private static Color COLOR_TEXT_NORMAL = Color.white;
-    private static Color COLOR_TEXT_HIGHLIGHT = new Color(1f, 0.825f, 0f, 0.25f);
+    private static Color COLOR_TEXT_HIGHLIGHT = new Color(1f, 0.94f, 0.6f, 0.25f);
 
     private static float FADE_IN = 1f;
     private static float FADE_OUT = 0f;
-
-    private static float SCALE_Y_NORMAL = 1f;
-    private static float SCALE_Y_SQUISHY = 0.76f;
 
     public static void Spawn(Tile tile, Sequence sequence, Options options)
     {
@@ -134,22 +131,29 @@ public static class Animate
         Wiggle(tile, sequence, Options.Default);
     }
 
+    public static void Fade(Graphic graphic, Sequence sequence, float fade, Options options)
+    {
+        sequence.Insert(options.delay, graphic.DOFade(fade, options.duration));
+    }
+    public static void Fade(Graphic graphic, Sequence sequence, float fade)
+    {
+        Fade(graphic, sequence, fade, Options.Default);
+    }
     public static void FadeIn(Graphic graphic, Sequence sequence, Options options)
     {
-        sequence.Insert(options.delay, graphic.DOFade(FADE_IN, options.duration));
+        Fade(graphic, sequence, FADE_IN, options);
     }
     public static void FadeIn(Graphic graphic, Sequence sequence)
     {
-        FadeIn(graphic, sequence, Options.Default);
+        Fade(graphic, sequence, FADE_IN, Options.Default);
     }
-
     public static void FadeOut(Graphic graphic, Sequence sequence, Options options)
     {
-        sequence.Insert(options.delay, graphic.DOFade(FADE_OUT, options.duration));
+        Fade(graphic, sequence, FADE_OUT, options);
     }
     public static void FadeOut(Graphic graphic, Sequence sequence)
     {
-        FadeOut(graphic, sequence, Options.Default);
+        Fade(graphic, sequence, FADE_OUT, Options.Default);
     }
 
     public static void UpdateText(TextMeshProUGUI text, string msg, Sequence sequence, Options options)
