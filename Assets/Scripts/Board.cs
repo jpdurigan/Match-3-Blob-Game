@@ -50,7 +50,7 @@ public sealed class Board : MonoBehaviour
 
     private void Start()
     {
-        ScoreCounter.Instance.Score = 0;
+        // ScoreCounter.Instance.Score = 0;
     }
 
     /////////////////////////////////////////////////////
@@ -69,7 +69,8 @@ public sealed class Board : MonoBehaviour
         await HandleBlankTiles();
         await HandleGridVisual();
 
-        ScoreCounter.Instance.Score = 0;
+        // ScoreCounter.Instance.Score = 0;
+        ScoreCounter.Instance.StartLevel(level);
     }
 
     public async void Select(Tile tile)
@@ -283,7 +284,7 @@ public sealed class Board : MonoBehaviour
 
         if (slimeTiles != null)
         {
-            ScoreCounter.Instance.Lives = slimeTiles.Count;
+            // ScoreCounter.Instance.Lives = slimeTiles.Count;
             await wiggleSequence.Play().AsyncWaitForCompletion();
 
             Tile centerSlime = GetCenterTile(slimeTiles);
@@ -301,7 +302,7 @@ public sealed class Board : MonoBehaviour
         foreach (Tile tile in structure.Tiles)
         {
             Animate.Kill(tile, deflateSequence);
-            ScoreCounter.Instance.Score += ItemDatabase.GetItemValue(tile.Type);
+            ScoreCounter.Instance.AddToScore(tile.Type, deflateSequence);
         }
 
         audioSource.PlayOneShot(sfx);

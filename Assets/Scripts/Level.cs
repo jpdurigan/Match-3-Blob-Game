@@ -7,6 +7,11 @@ public class Level : ScriptableObject
     public Vector2Int gridSize = Vector2Int.zero;
     public Item.Types[] initialCondition = new Item.Types[0];
 
+    public Item.Types goalType = Item.Types.NONE;
+    public int goalAmount = -1;
+
+    public int turnsAmount = -1;
+
     public int Width => gridSize.x;
     public int Height => gridSize.y;
 

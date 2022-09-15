@@ -1404,7 +1404,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scoreText: {fileID: 1731374184}
-  livesText: {fileID: 1312492172}
+  turnsText: {fileID: 1812562246}
+  targetsText: {fileID: 1312492172}
 --- !u!4 &840529950
 Transform:
   m_ObjectHideFlags: 0

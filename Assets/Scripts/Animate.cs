@@ -17,7 +17,7 @@ public static class Animate
     private static Color COLOR_ALIVE = Color.white;
     private static Color COLOR_DEAD = new Color(1, 1, 1, 0);
     private static Color COLOR_TEXT_NORMAL = Color.white;
-    private static Color COLOR_TEXT_HIGHLIGHT = new Color(1f, 0.825f, 0f, 1f);
+    private static Color COLOR_TEXT_HIGHLIGHT = new Color(1f, 0.825f, 0f, 0.25f);
 
     private static float FADE_IN = 1f;
     private static float FADE_OUT = 0f;
