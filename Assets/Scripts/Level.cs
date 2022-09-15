@@ -15,6 +15,9 @@ public class Level : ScriptableObject
     public int Width => gridSize.x;
     public int Height => gridSize.y;
 
+    public bool isAvailable = false;
+    public bool isCompleted = false;
+
     public Item.Types GetTile(int x, int y) => initialCondition[GetTileIndex(x, y)];
     public Item.Types GetTile(int x, int y, Vector2Int size) => initialCondition[GetTileIndex(x, y, size)];
     public int GetTileIndex(int x, int y) => x + gridSize.x * y;
