@@ -18,4 +18,4 @@ MonoBehaviour:
   goalAmount: 8
   turnsAmount: 8
   isAvailable: 0
-  isCompleted: 1
+  isCompleted: 0

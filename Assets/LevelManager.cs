@@ -25,6 +25,8 @@ public class LevelManager : MonoBehaviour
     
     private void Start()
     {
+        foreach(Level level in levels) level.Reset();
+        levels[0].isAvailable = true;
         ShowLevels();
     }
 
