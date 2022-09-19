@@ -18,12 +18,13 @@ public static class ItemDatabase
     {
         Initialize();
     }
-    
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Initialize()
     {
         Items = Resources.LoadAll<Item>(path:"Items/").OrderBy(i => i.weight).ToArray();
         database = new Dictionary<Item.Types, Item>();
+        itemsTotalWeight = 0f;
         foreach(Item item in Items)
         {
             itemsTotalWeight += item.weight;
