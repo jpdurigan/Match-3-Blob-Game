@@ -69,7 +69,7 @@ public sealed class Board : MonoBehaviour
         ScoreCounter.Instance.StartLevel(level);
 
         await HandleInitialCondition(level);
-        await HandleBlankTiles();
+        await HandleBlankTiles(false);
         await HandleGridVisual();
 
         await MessagePanel.Instance.Hide();
@@ -190,9 +190,9 @@ public sealed class Board : MonoBehaviour
                     break;
                 case Jobs.HANDLE_BLANK:
                     // print("// ENTERED JOB: HANDLE_BLANK");
-                    await HandleBlankTiles();
+                    hasChangedGrid = await HandleBlankTiles();
                     // print("// EXITED JOB: HANDLE_BLANK");
-                    job = Jobs.DONE;
+                    job = hasChangedGrid ? Jobs.HANDLE_MATCHES : Jobs.DONE;
                     break;
             }
             // await Task.Delay(1000);
@@ -279,21 +279,24 @@ public sealed class Board : MonoBehaviour
         return hasChangedGrid;
     }
 
-    private async Task HandleBlankTiles()
+    private async Task<bool> HandleBlankTiles(bool allowMatches = true)
     {
+        bool hasChangedGrid = false;
         Sequence inflateSequence = DOTween.Sequence();
         foreach (Tile tile in Tiles)
         {
             if (!tile.IsNone()) continue;
             tile.Type = ItemDatabase.GetRandomItem().type;
             // GARGALO
-            while (tile.ShouldDestroy())
+            while (!allowMatches && tile.ShouldDestroy())
             {
                 tile.Type = ItemDatabase.GetRandomItem().type;
             }
             Animate.Spawn(tile, inflateSequence);
+            hasChangedGrid = true;
         }
-        await inflateSequence.Play().AsyncWaitForCompletion();
+        if (hasChangedGrid) await inflateSequence.Play().AsyncWaitForCompletion();
+        return hasChangedGrid;
     }
 
     private async Task HandleGridVisual()

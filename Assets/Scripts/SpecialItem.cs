@@ -28,9 +28,10 @@ public static class SpecialItem
         return deathTiles;
     }
 
-    public static List<Tile> GetDamage(Tile tile)
+    public static List<Tile> GetDamage(Tile tile, List<Tile> exclude = null)
     {
         List<Tile> tiles = new List<Tile>();
+        if (exclude == null) exclude = new List<Tile>();
         Board board = Board.Instance;
         switch (tile.Type)
         {
@@ -50,7 +51,12 @@ public static class SpecialItem
                 };
                 break;
         }
-        tiles.RemoveAll((tile) => tile == null || tile.IsBlock());
+        tiles.RemoveAll((t) => t == null || t.IsBlock() || exclude.Contains(t));
+        for(int i = 0; i < tiles.Count(); i++)
+        {
+            Tile t = tiles[i];
+            if (t.IsBomb()) Tile.AddListToList(tiles, GetDamage(t, tiles));
+        }
         return tiles;
     }
 }

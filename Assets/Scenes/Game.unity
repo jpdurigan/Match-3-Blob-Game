@@ -1902,9 +1902,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levels:
-  - {fileID: 11400000, guid: 58aeeabdaf4714a878a9b22cd4cbcb8b, type: 2}
-  - {fileID: 11400000, guid: 9eea59113cbf8461288efc2af07ddb36, type: 2}
-  - {fileID: 11400000, guid: 22a45d398fb7b49759d22fec82124454, type: 2}
+  - {fileID: 11400000, guid: 303c756d6a6ce412982232886314446f, type: 2}
+  - {fileID: 11400000, guid: ab0e6536479f142f8a9a14367ed44246, type: 2}
+  - {fileID: 11400000, guid: 112861945239845e99333a4151a7ff1c, type: 2}
   boardGameObject: {fileID: 1348160615}
   levelsGameObject: {fileID: 412927059}
   levelButtonsParent: {fileID: 809483166}
