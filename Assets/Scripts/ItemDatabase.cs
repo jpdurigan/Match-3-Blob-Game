@@ -2,9 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
 
 [InitializeOnLoad]
+#endif
 public static class ItemDatabase
 {
     public static Item[] Items { get; private set; }
@@ -13,6 +15,12 @@ public static class ItemDatabase
     private static float itemsTotalWeight = 0f;
 
     static ItemDatabase()
+    {
+        Initialize();
+    }
+    
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void Initialize()
     {
         Items = Resources.LoadAll<Item>(path:"Items/").OrderBy(i => i.weight).ToArray();
         database = new Dictionary<Item.Types, Item>();
