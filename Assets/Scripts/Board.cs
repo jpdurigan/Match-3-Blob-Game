@@ -16,22 +16,23 @@ public sealed class Board : MonoBehaviour
         HANDLE_FLOATING,
         HANDLE_SLIME,
         HANDLE_BLANK,
+        CHECK_WIN_LOSE_CONDITION,
         DONE,
     }
 
 
     [Header("Game")]
-    public Row[] rows;
+    [SerializeField] GameObject tilePrefab;
+    [SerializeField] GameObject rowPrefab;
+    private Row[] rows;
+    private Tile[,] Tiles;
 
-    public Tile[,] Tiles { get; private set; }
-    [SerializeField] Vector2Int[] playerSpawn;
-
-    public int Width => Tiles.GetLength(dimension:0);
+    public int Width => Tiles.GetLength(dimension: 0);
     public int Height => Tiles.GetLength(1);
 
-    private List<Tile> _selection = new List<Tile>();
-    private bool shouldBlockSelection = false;
-    
+    private List<Tile> _selection;
+    private bool shouldBlockSelection;
+
     [Header("Audio")]
     [SerializeField] private AudioClip collectSound;
     [SerializeField] private AudioClip slimeSpawnSound;
@@ -39,7 +40,7 @@ public sealed class Board : MonoBehaviour
     [SerializeField] private AudioSource audioSource;
 
     /////////////////////////////////////////////////////
-    
+
 
     //// ENGINE METHODS
 
@@ -50,44 +51,40 @@ public sealed class Board : MonoBehaviour
 
     private void Start()
     {
-        Tiles = new Tile[rows[0].tiles.Length, rows.Length];
-
-        for (var y = 0; y < Height; y++)
-        {
-            for (var x = 0; x < Width; x++)
-            {
-                Tile tile = rows[y].tiles[x];
-
-                tile.x = x;
-                tile.y = y;
-                Tiles[x, y] = tile;
-            }
-        }
-        foreach(Tile tile in Tiles)
-        {
-            tile.Initialize();
-        }
-
-        ScoreCounter.Instance.Score = 0;
+        // ScoreCounter.Instance.Score = 0;
     }
 
     /////////////////////////////////////////////////////
-    
+
 
     //// MECHANICS
-    public async void StartGame()
+    public async void StartLevel(Level level)
     {
-        MessagePanel.Instance.Hide();
-        foreach(Tile tile in Tiles)
-        {
-            tile.Type = Item.Types.NONE;
-        }
+        CreateGrid(level);
+        _selection = new List<Tile>();
+        shouldBlockSelection = false;
+        
+        await MessagePanel.Instance.ShowMessage(MessagePanel.Instance.EmptyMessage);
 
-        await SpawnPlayer();
-        await HandleBlankTiles();
+        ScoreCounter.Instance.StartLevel(level);
+
+        await HandleInitialCondition(level);
+        await HandleBlankTiles(false);
         await HandleGridVisual();
 
-        ScoreCounter.Instance.Score = 0;
+        await MessagePanel.Instance.Hide();
+    }
+
+    public async Task PlayerWon()
+    {
+        LevelManager.Instance.PlayerWon();
+        await MessagePanel.Instance.ShowMessage(MessagePanel.Instance.WinMessage);
+    }
+
+    public async Task PlayerLost()
+    {
+        if (ScoreCounter.Instance.HasNoLivesLeft) await MessagePanel.Instance.ShowMessage(MessagePanel.Instance.LostAllLivesMessage);
+        else if (ScoreCounter.Instance.HasNoTurnLeft) await MessagePanel.Instance.ShowMessage(MessagePanel.Instance.TurnsEndedMessage);
     }
 
     public async void Select(Tile tile)
@@ -100,6 +97,7 @@ public sealed class Board : MonoBehaviour
         {
             _selection.Remove(tile);
             await Animate.AsyncDeselect(tile);
+            if (tile.IsTriggered) tile.IsTriggered = false;
             shouldBlockSelection = false;
             return;
         }
@@ -117,6 +115,7 @@ public sealed class Board : MonoBehaviour
         }
 
         _selection.Add(tile);
+        tile.IsTriggered = true;
         await Animate.AsyncSelect(tile);
 
         if (_selection.Count < 2)
@@ -129,6 +128,7 @@ public sealed class Board : MonoBehaviour
 
         if (HasMatches())
         {
+            ScoreCounter.Instance.OnSuccessfullSwap();
             await HandleGrid();
         }
         else
@@ -146,7 +146,7 @@ public sealed class Board : MonoBehaviour
         // print("// ENTERED HANDLE GRID");
 
         Sequence wiggleSequence = DOTween.Sequence();
-        foreach(Tile tile in Tiles)
+        foreach (Tile tile in Tiles)
         {
             tile.OnUpdatingGrid();
             if (tile.IsSlime()) Animate.Wiggle(tile, wiggleSequence);
@@ -173,13 +173,26 @@ public sealed class Board : MonoBehaviour
                     // print("// ENTERED JOB: HANDLE_SLIME");
                     hasChangedGrid = await HandleSlimeTiles();
                     // print("// EXITED JOB: HANDLE_SLIME");
-                    job = hasChangedGrid ? Jobs.HANDLE_FLOATING : Jobs.HANDLE_BLANK;
+                    job = hasChangedGrid ? Jobs.HANDLE_FLOATING : Jobs.CHECK_WIN_LOSE_CONDITION;
+                    break;
+                case Jobs.CHECK_WIN_LOSE_CONDITION:
+                    if (ScoreCounter.Instance.HasPlayerWon)
+                    {
+                        await PlayerWon();
+                        return;
+                    }
+                    else if (ScoreCounter.Instance.HasPlayerLost)
+                    {
+                        await PlayerLost();
+                        return;
+                    }
+                    job = Jobs.HANDLE_BLANK;
                     break;
                 case Jobs.HANDLE_BLANK:
                     // print("// ENTERED JOB: HANDLE_BLANK");
-                    await HandleBlankTiles();
+                    hasChangedGrid = await HandleBlankTiles();
                     // print("// EXITED JOB: HANDLE_BLANK");
-                    job = Jobs.DONE;
+                    job = hasChangedGrid ? Jobs.HANDLE_MATCHES : Jobs.DONE;
                     break;
             }
             // await Task.Delay(1000);
@@ -194,12 +207,12 @@ public sealed class Board : MonoBehaviour
     private async Task<bool> HandleMatches()
     {
         bool hasChangedGrid = false;
-        foreach(Tile tile in Tiles)
+        foreach (Tile tile in Tiles)
         {
-            List<Tile> connectedTiles = tile.GetConnectedTiles();
             if (tile.IsNone() || !tile.ShouldDestroy()) continue;
 
-            await KillTiles(connectedTiles, collectSound);
+            Structure structure = tile.GetStructure();
+            await KillTiles(structure, collectSound);
             hasChangedGrid = true;
         }
         return hasChangedGrid;
@@ -214,6 +227,7 @@ public sealed class Board : MonoBehaviour
             for (int y = Height - 1; y >= 0f; y--)
             {
                 Tile tile = Tiles[x, y];
+                if (tile.IsBlock()) continue;
                 if (!tile.IsNone() && blankTile != null)
                 {
                     y = blankTile.y;
@@ -236,13 +250,13 @@ public sealed class Board : MonoBehaviour
         List<Tile> biggestSlime = null;
         List<List<Tile>> allSlimes = new List<List<Tile>>();
 
-        foreach(Tile tile in Tiles)
+        foreach (Tile tile in Tiles)
         {
             if (!tile.IsSlime()) continue;
 
-            List<Tile> connectedTiles = tile.GetConnectedTiles();
+            List<Tile> connectedTiles = tile.GetAllConnections();
             if (allSlimes.Contains(connectedTiles)) continue;
-            
+
             allSlimes.Add(connectedTiles);
             if (biggestSlime == null || connectedTiles.Count > biggestSlime.Count) biggestSlime = connectedTiles;
         }
@@ -250,10 +264,13 @@ public sealed class Board : MonoBehaviour
         if (allSlimes.Count > 1)
         {
             allSlimes.Remove(biggestSlime);
-            List<Tile> slimesToKill = new List<Tile>();
-            foreach(List<Tile> slimeChain in allSlimes)
+            Structure slimesToKill = new Structure();
+            foreach (List<Tile> slimeChain in allSlimes)
             {
-                slimesToKill.AddRange(slimeChain);
+                foreach (Tile slimeTile in slimeChain)
+                {
+                    slimesToKill.Add(slimeTile);
+                }
             }
             await KillTiles(slimesToKill, slimeKillSound);
             hasChangedGrid = true;
@@ -262,22 +279,24 @@ public sealed class Board : MonoBehaviour
         return hasChangedGrid;
     }
 
-
-    private async Task HandleBlankTiles()
+    private async Task<bool> HandleBlankTiles(bool allowMatches = true)
     {
+        bool hasChangedGrid = false;
         Sequence inflateSequence = DOTween.Sequence();
-        foreach(Tile tile in Tiles)
+        foreach (Tile tile in Tiles)
         {
             if (!tile.IsNone()) continue;
             tile.Type = ItemDatabase.GetRandomItem().type;
             // GARGALO
-            while (tile.GetConnectedTiles().Count > 2)
+            while (!allowMatches && tile.ShouldDestroy())
             {
                 tile.Type = ItemDatabase.GetRandomItem().type;
             }
             Animate.Spawn(tile, inflateSequence);
+            hasChangedGrid = true;
         }
-        await inflateSequence.Play().AsyncWaitForCompletion();
+        if (hasChangedGrid) await inflateSequence.Play().AsyncWaitForCompletion();
+        return hasChangedGrid;
     }
 
     private async Task HandleGridVisual()
@@ -285,19 +304,19 @@ public sealed class Board : MonoBehaviour
         List<Tile> slimeTiles = null;
 
         Sequence wiggleSequence = DOTween.Sequence();
-        foreach(Tile tile in Tiles)
+        foreach (Tile tile in Tiles)
         {
             tile.UpdateVisual();
             if (tile.IsSlime())
             {
                 Animate.Wiggle(tile, wiggleSequence);
-                if (slimeTiles == null) slimeTiles = tile.GetConnectedTiles();
+                if (slimeTiles == null) slimeTiles = tile.GetAllConnections();
             }
         }
 
         if (slimeTiles != null)
         {
-            ScoreCounter.Instance.Lives = slimeTiles.Count;
+            // ScoreCounter.Instance.Lives = slimeTiles.Count;
             await wiggleSequence.Play().AsyncWaitForCompletion();
 
             Tile centerSlime = GetCenterTile(slimeTiles);
@@ -305,82 +324,121 @@ public sealed class Board : MonoBehaviour
         }
         else
         {
-            MessagePanel.Instance.ShowMessage("Game Over!");
+            // await MessagePanel.Instance.ShowMessage("Game Over!");
         }
     }
 
-    private async Task KillTiles(List<Tile> tiles, AudioClip sfx)
+    private async Task KillTiles(Structure structure, AudioClip sfx)
     {
-        List<Tile> growthTiles = new List<Tile>();
-        List<Tile> deathTiles = new List<Tile>();
         Sequence deflateSequence = DOTween.Sequence();
-        foreach(Tile tile in tiles)
+        foreach (Tile tile in structure.Tiles)
         {
-            if (tile.Is(Item.Types.GROWTH) && tile.IsNeighbouringSlime()) AddListToList(growthTiles, tile.GetConnectedTiles());
-            if (tile.Is(Item.Types.DEATH) && tile.IsNeighbouringSlime()) deathTiles.Add(tile);
             Animate.Kill(tile, deflateSequence);
-            ScoreCounter.Instance.Score += ItemDatabase.GetItemValue(tile.Type);
+            ScoreCounter.Instance.AddToScore(tile.Type, deflateSequence);
+            if (tile.IsSlime()) ScoreCounter.Instance.TakeLife(deflateSequence);
         }
-        
+
         audioSource.PlayOneShot(sfx);
         await deflateSequence.Play().AsyncWaitForCompletion();
 
-        if (growthTiles.Count > 0) await HandleGrowthTiles(growthTiles);
-        if (deathTiles.Count > 0) await HandleDeathTiles(deathTiles);
+        List<Tile> excludeTiles = new List<Tile>();
 
-        foreach(Tile tile in tiles)
+        // handle creating bombs
+        Item.Types bombType = structure.GetBomb();
+        if (bombType != Item.Types.NONE)
         {
-            if (growthTiles.Contains(tile)) continue;
+            Tile bombTile = await HandleGrowBomb(structure.Tiles, bombType);
+            excludeTiles.Add(bombTile);
+        }
+
+        if (structure.type == Item.Types.GROWTH)
+        {
+            List<Tile> tilesGrown = await HandleGrowthTiles(structure);
+            excludeTiles.AddRange(tilesGrown);
+        }
+        if (structure.type == Item.Types.DEATH) await HandleDeathTiles(structure);
+
+        foreach (Tile tile in structure.Tiles)
+        {
+            if (excludeTiles.Contains(tile)) continue;
             tile.Type = Item.Types.NONE;
         }
     }
 
-    private async Task HandleGrowthTiles(List<Tile> tiles)
+    private async Task GrowSlimeTiles(List<Tile> tilesToGrow)
     {
         Sequence growthSequence = DOTween.Sequence();
 
-        foreach(Tile tile in tiles)
+        foreach (Tile tile in tilesToGrow)
         {
+            // if tile is occupied with bomb, skip it
+            if (tile.IsBomb()) continue;
+
             tile.Type = Item.Types.SLIME;
             tile.OnUpdatingGrid();
             Animate.Spawn(tile, growthSequence);
+            ScoreCounter.Instance.AddLife(growthSequence);
         }
 
         audioSource.PlayOneShot(slimeSpawnSound);
         await growthSequence.Play().AsyncWaitForCompletion();
     }
 
-    private async Task HandleDeathTiles(List<Tile> tiles)
+    private async Task<Tile> HandleGrowBomb(List<Tile> tiles, Item.Types bomb)
     {
-        List<Tile> slimes = new List<Tile>();
-        foreach(Tile tile in tiles)
+        Tile centerTile = GetCenterTile(tiles);
+        centerTile.Type = bomb;
+        centerTile.OnUpdatingGrid();
+        await Animate.AsyncSpawn(centerTile);
+        return centerTile;
+    }
+
+    private async Task<List<Tile>> HandleGrowthTiles(Structure structure)
+    {
+        List<Tile> tilesToGrow = SpecialItem.GetGrowthAffectedTiles(structure);
+        if (tilesToGrow.Count > 0) await GrowSlimeTiles(tilesToGrow);
+        return tilesToGrow;
+    }
+
+    private async Task<List<Tile>> HandleDeathTiles(Structure structure)
+    {
+        List<Tile> tilesToKill = SpecialItem.GetDeathAffectedTiles(structure);
+        if (tilesToKill.Count > 0)
         {
-            foreach(Tile neighbour in tile.Neighbours)
+            Structure slimes = new Structure();
+            slimes.AddList(tilesToKill);
+            await KillTiles(slimes, slimeKillSound);
+        }
+        return tilesToKill;
+    }
+
+    private async Task HandleInitialCondition(Level level)
+    {
+        Sequence growthSequence = DOTween.Sequence();
+
+        for (int y = 0; y < level.Height; y++)
+        {
+            for (int x = 0; x < level.Width; x++)
             {
-                if (neighbour == null || !neighbour.IsSlime()) continue;
-                if (!slimes.Contains(neighbour)) slimes.Add(neighbour);
+                Item.Types type = level.GetTile(x, y);
+                if (type != Item.Types.RANDOM)
+                {
+                    Tile tile = Tiles[x, y];
+                    tile.Type = type;
+                    tile.OnUpdatingGrid();
+                    Animate.Spawn(tile, growthSequence);
+                }
             }
         }
 
-        if (slimes.Count > 0) await KillTiles(slimes, slimeKillSound);
-    }
-    
-    private async Task SpawnPlayer()
-    {
-        List<Tile> playerTiles = new List<Tile>();
-        foreach(Vector2Int position in playerSpawn)
-        {
-            Tile tile = GetTile(position.x, position.y);
-            playerTiles.Add(tile);
-        }
-        ScoreCounter.Instance.Lives = playerTiles.Count;
-        await HandleGrowthTiles(playerTiles);
+        audioSource.PlayOneShot(slimeSpawnSound);
+        await growthSequence.Play().AsyncWaitForCompletion();
     }
 
     private bool HasMatches()
     {
         bool hasMatches = false;
-        foreach(Tile tile in Tiles)
+        foreach (Tile tile in Tiles)
         {
             hasMatches = tile.ShouldDestroy();
             if (hasMatches) break;
@@ -389,9 +447,37 @@ public sealed class Board : MonoBehaviour
     }
 
     /////////////////////////////////////////////////////
-    
+
 
     //// HELPERS
+
+    private void CreateGrid(Level level)
+    {
+        foreach (Transform child in transform)
+        {
+            GameObject.Destroy(child.gameObject);
+        }
+
+        GetComponent<AspectRatioFitter>().aspectRatio = (float)level.Width / (float)level.Height;
+        Tiles = new Tile[level.Width, level.Height];
+        for (var y = 0; y < Height; y++)
+        {
+            GameObject currentRow = Instantiate(rowPrefab, Vector3.zero, Quaternion.identity, transform);
+            for (var x = 0; x < Width; x++)
+            {
+                GameObject currentTile = Instantiate(tilePrefab, Vector3.zero, Quaternion.identity, currentRow.transform);
+                Tile tile = currentTile.GetComponent<Tile>();
+                tile.x = x;
+                tile.y = y;
+                Tiles[x, y] = tile;
+            }
+        }
+
+        foreach (Tile tile in Tiles)
+        {
+            tile.Initialize();
+        }
+    }
 
     public Tile GetTile(int x, int y)
     {
@@ -402,7 +488,7 @@ public sealed class Board : MonoBehaviour
     private Tile GetCenterTile(List<Tile> tiles)
     {
         Vector2 middlePosition = Vector2.zero;
-        foreach(Tile tile in tiles)
+        foreach (Tile tile in tiles)
         {
             Vector2 tilePosition = tile.GetVector2();
             middlePosition += tilePosition / (float)tiles.Count;
@@ -412,7 +498,7 @@ public sealed class Board : MonoBehaviour
 
         Tile centerTile = null;
         float dist = float.MaxValue;
-        foreach(Tile tile in tiles)
+        foreach (Tile tile in tiles)
         {
             float tileDist = (tile.GetVector2() - middlePosition).SqrMagnitude();
             if (tileDist <= Mathf.Epsilon)
@@ -440,6 +526,8 @@ public sealed class Board : MonoBehaviour
         Transform icon2Transform = icon2.transform;
         Image eyes1 = tile1.eyes;
         Image eyes2 = tile2.eyes;
+        bool isTriggered1 = tile1.IsTriggered;
+        bool isTriggered2 = tile2.IsTriggered;
 
         // swap parents
         icon1Transform.SetParent(tile2.transform);
@@ -454,22 +542,17 @@ public sealed class Board : MonoBehaviour
         // swap types
         tile1.Type = item2;
         tile2.Type = item1;
+
+        // swap is triggered
+        tile1.IsTriggered = isTriggered2;
+        tile2.IsTriggered = isTriggered1;
     }
 
     private async Task AsyncSwap(Tile tile1, Tile tile2, float animSpeed = 1f)
     {
         // animate movement
-        await Animate.AsyncSwap(tile1, tile2, animSpeed);
+        await Animate.AsyncSwap(tile1, tile2, Animate.Options.Speed(animSpeed));
         // swap data
         SwapData(tile1, tile2);
-    }
-
-    private void AddListToList(List<Tile> listA, List<Tile> listB)
-    {
-        foreach(Tile tile in listB)
-        {
-            if (listA.Contains(tile)) continue;
-            listA.Add(tile);
-        }
     }
 }

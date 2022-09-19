@@ -14,10 +14,17 @@ public class Item : ScriptableObject
         PURPLE,
         GROWTH,
         DEATH,
+        BOMB_HORIZONTAL,
+        BOMB_VERTICAL,
+        BOMB_SQUARE,
+        BLOCK,
+        RANDOM,
+        INVALID,
     }
 
     public Types type;
     public int value;
     public Sprite sprite;
+    public Texture texture;
     [Range(0f, 2f)] public float weight;
 }
